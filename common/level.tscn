@@ -1,0 +1,81 @@
+[gd_scene load_steps=13 format=3 uid="uid://c7v5i84bf6bak"]
+
+[ext_resource type="PackedScene" uid="uid://2oxdgu03lnbk" path="res://kinematic_fps_controller/kinematic_fps_controller.tscn" id="1_kuwff"]
+[ext_resource type="Script" path="res://common/level.gd" id="1_y6gtq"]
+
+[sub_resource type="NavigationMesh" id="NavigationMesh_c7y1b"]
+vertices = PackedVector3Array(-49.5, 0.2, 0, -1, 0.2, 0, -1, 0.2, -0.599998, -0.799999, 0.2, -0.899998, 0.100002, 0.2, -1, 0.100002, 0.2, -49.5, -49.5, 0.2, -49.5, 1.1, 0.2, -0.599998, 1.1, 0.2, 0, 49.5, 0.2, 0, 0.900002, 0.2, -0.899998, 49.5, 0.2, -49.5, 0, 0.2, 49.5, 0, 0.2, 1.1, -0.599998, 0.2, 1.1, -0.899998, 0.2, 0.900002, -49.5, 0.2, 49.5, 1.1, 0.2, 0.600002, 0.799999, 0.2, 1, 49.5, 0.2, 49.5)
+polygons = [PackedInt32Array(0, 2, 1), PackedInt32Array(3, 5, 4), PackedInt32Array(2, 0, 3), PackedInt32Array(3, 0, 6), PackedInt32Array(3, 6, 5), PackedInt32Array(9, 8, 7), PackedInt32Array(10, 4, 5), PackedInt32Array(7, 10, 9), PackedInt32Array(9, 10, 11), PackedInt32Array(11, 10, 5), PackedInt32Array(12, 14, 13), PackedInt32Array(14, 12, 15), PackedInt32Array(15, 12, 16), PackedInt32Array(15, 16, 0), PackedInt32Array(15, 0, 1), PackedInt32Array(17, 8, 9), PackedInt32Array(18, 12, 13), PackedInt32Array(17, 9, 18), PackedInt32Array(18, 9, 19), PackedInt32Array(18, 19, 12)]
+geometry_parsed_geometry_type = 1
+cell_size = 0.1
+cell_height = 0.1
+agent_height = 2.0
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_3i0x4"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_3v15s"]
+sky_material = SubResource("ProceduralSkyMaterial_3i0x4")
+
+[sub_resource type="Environment" id="Environment_bvdge"]
+background_mode = 2
+sky = SubResource("Sky_3v15s")
+tonemap_mode = 2
+ssao_enabled = true
+glow_enabled = true
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_iafqw"]
+size = Vector3(100, 1, 100)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rjmij"]
+albedo_color = Color(0.140447, 0.140447, 0.140447, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_tq06h"]
+material = SubResource("StandardMaterial3D_rjmij")
+size = Vector2(100, 100)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_pafu0"]
+size = Vector3(1, 2, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_i3eij"]
+albedo_color = Color(0.1917, 0.234892, 0.71, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_8mf4u"]
+material = SubResource("StandardMaterial3D_i3eij")
+size = Vector3(1, 2, 1)
+
+[node name="Level" type="NavigationRegion3D"]
+navigation_mesh = SubResource("NavigationMesh_c7y1b")
+script = ExtResource("1_y6gtq")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_bvdge")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
+shadow_enabled = true
+
+[node name="Player" parent="." instance=ExtResource("1_kuwff")]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.123185, 3.65568)
+
+[node name="Ground" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, -0.5, 2.08165e-12)
+shape = SubResource("BoxShape3D_iafqw")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ground"]
+mesh = SubResource("PlaneMesh_tq06h")
+
+[node name="Heart" type="StaticBody3D" parent="."]
+unique_name_in_owner = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Heart"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, 1, 2.08165e-12)
+shape = SubResource("BoxShape3D_pafu0")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Heart"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, 1, 2.08165e-12)
+mesh = SubResource("BoxMesh_8mf4u")
