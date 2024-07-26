@@ -26,3 +26,8 @@ mesh = SubResource("BoxMesh_omtsp")
 
 [node name="Sphere" type="MeshInstance3D" parent="."]
 mesh = SubResource("SphereMesh_d2krb")
+
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+billboard = 1
+text = "Label"

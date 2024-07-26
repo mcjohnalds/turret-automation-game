@@ -1,4 +1,3 @@
-- Labels on sensors/turrets
 - Program editor
 - Make sensors detect
 - Make guns shoot enemies

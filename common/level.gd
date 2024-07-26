@@ -4,8 +4,37 @@ class_name Level
 const _enemy_scene := preload("res://common/enemy.tscn")
 const _turret_scene := preload("res://common/turret.tscn")
 const _proximity_sensor_scene := preload("res://common/proximity_sensor.tscn")
-var _turret_ghost: Node3D
+var _turret_ghost: Turret
 var _proximity_sensor_ghost: ProximitySensor
+var _next_random_word_index := 0
+var _random_words: Array[String] = [
+	"alpha",
+	"bravo",
+	"charlie",
+	"delta",
+	"echo",
+	"foxtrot",
+	"golf",
+	"hotel",
+	"india",
+	"juliett",
+	"kilo",
+	"lima",
+	"mike",
+	"november",
+	"oscar",
+	"papa",
+	"quebec",
+	"romeo",
+	"sierra",
+	"tango",
+	"uniform",
+	"victor",
+	"whiskey",
+	"xray",
+	"yankee",
+	"zulu",
+]
 @onready var _player: KinematicFpsController = %Player
 @onready var _heart: Node3D = %Heart
 
@@ -16,8 +45,10 @@ func _ready() -> void:
 	var sphere: SphereMesh = _proximity_sensor_ghost.sphere.mesh
 	sphere.radius = 6.0
 	sphere.height = 2.0 * sphere.radius
+	_proximity_sensor_ghost.label_3d.visible = false
 	_turret_ghost = _turret_scene.instantiate()
 	add_child(_turret_ghost)
+	_turret_ghost.label_3d.visible = false
 
 
 func _physics_process(delta: float) -> void:
@@ -66,17 +97,19 @@ func _unhandled_input(event: InputEvent) -> void:
 			var collision := _player_camera_ray_cast()
 			if not collision:
 				return
-			var turret = _turret_scene.instantiate()
+			var turret: Turret = _turret_scene.instantiate()
 			add_child(turret)
 			turret.global_position = collision.position
+			turret.label_3d.text = next_random_name()
 		if e.keycode == KEY_T and not e.pressed:
 			var collision := _player_camera_ray_cast()
 			if not collision:
 				return
-			var proximity_sensor = _proximity_sensor_scene.instantiate()
+			var proximity_sensor: ProximitySensor = _proximity_sensor_scene.instantiate()
 			add_child(proximity_sensor)
 			proximity_sensor.sphere.visible = false
 			proximity_sensor.global_position = collision.position
+			proximity_sensor.label_3d.text = next_random_name()
 
 
 func _on_enemy_velocity_computed(safe_velocity: Vector3, enemy: Enemy) -> void:
@@ -91,3 +124,9 @@ func _player_camera_ray_cast() -> Dictionary:
 	query.to = camera.global_position - camera.global_basis.z * 1000.0
 	query.exclude = [_player.get_rid()]
 	return get_world_3d().direct_space_state.intersect_ray(query)
+
+
+func next_random_name() -> String:
+	var word := _random_words[_next_random_word_index]
+	_next_random_word_index = (_next_random_word_index + 1) % _random_words.size()
+	return word

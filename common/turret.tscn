@@ -1,4 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://44suseftfys0"]
+[gd_scene load_steps=4 format=3 uid="uid://44suseftfys0"]
+
+[ext_resource type="Script" path="res://common/turret.gd" id="1_a6ca3"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_r4ms8"]
 albedo_color = Color(0.192157, 0.235294, 0.709804, 1)
@@ -7,7 +9,13 @@ albedo_color = Color(0.192157, 0.235294, 0.709804, 1)
 material = SubResource("StandardMaterial3D_r4ms8")
 
 [node name="Turret" type="Node3D"]
+script = ExtResource("1_a6ca3")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 mesh = SubResource("BoxMesh_4diqa")
+
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+billboard = 1
+text = "Label"
