@@ -1,6 +1,8 @@
 extends Node3D
 class_name Level
 
+signal code_edit_opened
+signal code_edit_closed
 const _enemy_scene := preload("res://common/enemy.tscn")
 const _turret_scene := preload("res://common/turret.tscn")
 const _proximity_sensor_scene := preload("res://common/proximity_sensor.tscn")
@@ -37,6 +39,7 @@ var _random_words: Array[String] = [
 ]
 @onready var _player: KinematicFpsController = %Player
 @onready var _heart: Node3D = %Heart
+@onready var _code_edit: CodeEdit = %CodeEdit
 
 
 func _ready() -> void:
@@ -110,6 +113,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			proximity_sensor.sphere.visible = false
 			proximity_sensor.global_position = collision.position
 			proximity_sensor.label_3d.text = next_random_name()
+		if e.keycode == KEY_C and e.pressed:
+			_code_edit.visible = true
+			_code_edit.grab_focus()
+			code_edit_opened.emit()
+		if e.keycode == KEY_ESCAPE and e.pressed and _code_edit.visible:
+			_code_edit.visible = false
+			get_viewport().set_input_as_handled()
+			code_edit_closed.emit()
 
 
 func _on_enemy_velocity_computed(safe_velocity: Vector3, enemy: Enemy) -> void:

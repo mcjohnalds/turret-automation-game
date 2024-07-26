@@ -9,11 +9,14 @@ var _mouse_mode_mismatch_count := 0
 @onready var _container: Node3D = $Container
 @onready var _main_menu: MainMenu = %MainMenu
 @onready var _menu_container = %MenuContainer
+@onready var _level: Level = %Level
 
 
 func _ready() -> void:
 	_main_menu.resumed.connect(_unpause)
 	_main_menu.restarted.connect(restarted.emit)
+	_level.code_edit_opened.connect(_on_code_edit_opened)
+	_level.code_edit_closed.connect(_on_code_edit_closed)
 	set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 
@@ -55,6 +58,14 @@ func _unpause() -> void:
 	_container.process_mode = Node.PROCESS_MODE_INHERIT
 	_menu_container.visible = false
 	_main_menu.settings_open = false
+	set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
+
+func _on_code_edit_opened() -> void:
+	set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+
+
+func _on_code_edit_closed() -> void:
 	set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 

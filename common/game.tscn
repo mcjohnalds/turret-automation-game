@@ -10,6 +10,7 @@ script = ExtResource("1_nixut")
 [node name="Container" type="Node3D" parent="."]
 
 [node name="Level" parent="Container" instance=ExtResource("2_1ngd7")]
+unique_name_in_owner = true
 
 [node name="MenuContainer" type="PanelContainer" parent="."]
 unique_name_in_owner = true

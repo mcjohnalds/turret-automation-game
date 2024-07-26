@@ -292,6 +292,8 @@ func _physics_process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED:
+		return
 	if event.is_action_pressed("shoot"):
 		_shoot_button_down = true
 	if event.is_action_released("shoot"):
