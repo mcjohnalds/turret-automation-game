@@ -98,6 +98,7 @@ class_name KinematicFpsController
 @export var weapon_angular_pid_kp := 300.0
 @export var weapon_angular_pid_kd := 20.0
 @export var bullet_impact_scene: PackedScene
+@export var enable_shooting := true
 @export_group("Health")
 @export var max_health := 100.0
 @export var blood_vignette_change_speed := 3.0

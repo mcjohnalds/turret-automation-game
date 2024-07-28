@@ -80,6 +80,20 @@ shape = SubResource("BoxShape3D_pafu0")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, 1, 2.08165e-12)
 mesh = SubResource("BoxMesh_8mf4u")
 
+[node name="Label" type="Label" parent="."]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -21.0
+offset_right = 40.0
+grow_vertical = 0
+text = "1 turret
+2 proximity sensor
+3 or
+4 and
+5 not
+6 timer"
+
 [node name="CodeEdit" type="CodeEdit" parent="."]
 unique_name_in_owner = true
 visible = false

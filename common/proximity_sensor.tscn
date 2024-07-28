@@ -18,7 +18,7 @@ albedo_color = Color(0.1917, 0.234892, 0.71, 0.415686)
 [sub_resource type="SphereMesh" id="SphereMesh_d2krb"]
 material = SubResource("StandardMaterial3D_m8u3y")
 
-[node name="ProximitySensor" type="Node3D"]
+[node name="ProximitySensor" type="Node3D" groups=["gates"]]
 script = ExtResource("1_vjhrv")
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
