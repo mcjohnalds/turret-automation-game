@@ -1,7 +1,8 @@
-[gd_scene load_steps=13 format=3 uid="uid://c7v5i84bf6bak"]
+[gd_scene load_steps=11 format=3 uid="uid://c7v5i84bf6bak"]
 
 [ext_resource type="PackedScene" uid="uid://2oxdgu03lnbk" path="res://kinematic_fps_controller/kinematic_fps_controller.tscn" id="1_kuwff"]
 [ext_resource type="Script" path="res://common/level.gd" id="1_y6gtq"]
+[ext_resource type="PackedScene" uid="uid://dmhvyyd7ii2uy" path="res://common/heart.tscn" id="3_5ilig"]
 
 [sub_resource type="NavigationMesh" id="NavigationMesh_c7y1b"]
 vertices = PackedVector3Array(-49.5, 0.2, 0, -1, 0.2, 0, -1, 0.2, -0.599998, -0.799999, 0.2, -0.899998, 0.100002, 0.2, -1, 0.100002, 0.2, -49.5, -49.5, 0.2, -49.5, 1.1, 0.2, -0.599998, 1.1, 0.2, 0, 49.5, 0.2, 0, 0.900002, 0.2, -0.899998, 49.5, 0.2, -49.5, 0, 0.2, 49.5, 0, 0.2, 1.1, -0.599998, 0.2, 1.1, -0.899998, 0.2, 0.900002, -49.5, 0.2, 49.5, 1.1, 0.2, 0.600002, 0.799999, 0.2, 1, 49.5, 0.2, 49.5)
@@ -35,16 +36,6 @@ albedo_color = Color(0.140447, 0.140447, 0.140447, 1)
 material = SubResource("StandardMaterial3D_rjmij")
 size = Vector2(100, 100)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_pafu0"]
-size = Vector3(1, 2, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_i3eij"]
-albedo_color = Color(0.1917, 0.234892, 0.71, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_8mf4u"]
-material = SubResource("StandardMaterial3D_i3eij")
-size = Vector3(1, 2, 1)
-
 [node name="Level" type="NavigationRegion3D"]
 navigation_mesh = SubResource("NavigationMesh_c7y1b")
 script = ExtResource("1_y6gtq")
@@ -69,16 +60,8 @@ shape = SubResource("BoxShape3D_iafqw")
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Ground"]
 mesh = SubResource("PlaneMesh_tq06h")
 
-[node name="Heart" type="StaticBody3D" parent="."]
+[node name="Heart" parent="." instance=ExtResource("3_5ilig")]
 unique_name_in_owner = true
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Heart"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, 1, 2.08165e-12)
-shape = SubResource("BoxShape3D_pafu0")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Heart"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, 1, 2.08165e-12)
-mesh = SubResource("BoxMesh_8mf4u")
 
 [node name="Label" type="Label" parent="."]
 anchors_preset = 2
@@ -108,3 +91,7 @@ offset_right = 566.0
 offset_bottom = 314.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="FailCamera" type="Camera3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(-0.791838, -0.20495, 0.575316, 0, 0.942011, 0.335581, -0.610731, 0.265726, -0.745921, 2.94646, 2.35516, -3.90858)

@@ -26,6 +26,10 @@
   {
     "name": "turret_1",
     "input_gate": "and_1"
+  },
+  {
+    "name": "turret_2",
+    "input_gate": "proximity_sensor_1"
   }
 ]
 

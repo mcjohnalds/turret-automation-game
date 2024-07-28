@@ -21,8 +21,9 @@ var _next_timer_gate_id := 1
 var _next_turret_id := 1
 # A gate can be a ProximitySensor, OrGate, AndGate, TimerGate, or Turret
 @onready var _player: KinematicFpsController = %Player
-@onready var _heart: Node3D = %Heart
+@onready var _heart: Heart = %Heart
 @onready var _code_edit: CodeEdit = %CodeEdit
+@onready var _fail_camera: Camera3D = %FailCamera
 
 
 func _ready() -> void:
@@ -43,10 +44,11 @@ func _physics_process(delta: float) -> void:
 			enemy.velocity.y = 0.0
 		else:
 			enemy.velocity.y -= 9.8 * get_physics_process_delta_time()
-		if enemy.nav_agent.is_navigation_finished():
-			continue
-		var next := enemy.nav_agent.get_next_path_position()
-		enemy.nav_agent.velocity = enemy.nav_agent.max_speed * enemy.global_position.direction_to(next)
+		if not enemy.nav_agent.is_navigation_finished():
+			var next := enemy.nav_agent.get_next_path_position()
+			enemy.nav_agent.velocity = enemy.nav_agent.max_speed * enemy.global_position.direction_to(next)
+		if enemy.global_position.distance_to(_heart.global_position) < 2.0:
+			_heart.health -= delta * 4.0
 	if Input.is_key_pressed(KEY_1):
 		var collision := _player_camera_ray_cast()
 		if collision:
@@ -105,6 +107,12 @@ func _physics_process(delta: float) -> void:
 			gate.label_3d.text = "%s time_remaining=%.1f output_value=%s" % [gate.name, gate.time_remaining, gate.output_value]
 		else:
 			gate.label_3d.text = "%s output_value=%s" % [gate.name, gate.output_value]
+	if _heart.health <= 0.0:
+		_heart.health = 0.0
+		_heart.visible = false
+		_fail_camera.current = true
+		process_mode = PROCESS_MODE_DISABLED
+	_heart.health_bar_control.foreground.anchor_right = _heart.health / _heart.MAX_HEALTH
 
 
 func _unhandled_input(event: InputEvent) -> void:

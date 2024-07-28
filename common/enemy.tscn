@@ -25,4 +25,3 @@ mesh = SubResource("CapsuleMesh_n33v1")
 avoidance_enabled = true
 height = 2.0
 max_speed = 5.0
-debug_enabled = true
