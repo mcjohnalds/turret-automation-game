@@ -234,32 +234,34 @@ func _parse_code(code: String) -> void:
 		if typeof(gate) != TYPE_DICTIONARY:
 			push_error("Expected root array element to be dictionary")
 			return
-		if _expect_gate_field_type(gate, "class_name", TYPE_STRING) != OK:
-			return
 		if _expect_gate_field_type(gate, "name", TYPE_STRING) != OK:
 			return
-		match gate["class_name"]:
-			"ProximitySensor":
+		var node := get_node_or_null(gate.name)
+		if not node:
+			push_error('Node not found with name "%s"' % gate.name)
+			return
+		match node.get_script():
+			ProximitySensor:
 				pass
-			"TimerGate":
+			TimerGate:
 				if _expect_gate_field_type(gate, "duration", TYPE_FLOAT) != OK:
 					return
 				if _expect_gate_field_type(gate, "input_gate", TYPE_STRING) != OK:
 					return
-			"OrGate":
+			OrGate:
 				if _expect_gate_field_input_gates(gate) != OK:
 					return
-			"AndGate":
+			AndGate:
 				if _expect_gate_field_input_gates(gate) != OK:
 					return
-			"NotGate":
+			NotGate:
 				if _expect_gate_field_type(gate, "input_gate", TYPE_STRING) != OK:
 					return
-			"Turret":
+			Turret:
 				if _expect_gate_field_type(gate, "input_gate", TYPE_STRING) != OK:
 					return
 			_:
-				push_error("Unexpected class_name value %s", gate["class_name"])
+				push_error('Node "%s" is not a gate' % gate.name)
 				return
 	var output_gate_names: Array[String] = []
 	for node in get_tree().get_nodes_in_group("gates"):
@@ -275,16 +277,12 @@ func _parse_code(code: String) -> void:
 					push_error('Gate "%s.input_gates" contains "%s" but not such gate exists' % [gate.name, input])
 					return
 	for gate in json.data:
-		if not get_node_or_null(gate.name):
-			push_error('Node not found with name "%s"' % gate.name)
-			return
-	for gate in json.data:
 		var node := get_node(gate.name)
-		match gate["class_name"]:
-			"ProximitySensor":
+		match node.get_script():
+			ProximitySensor:
 				node.output_value = false
 				node.output_gates = []
-			"TimerGate":
+			TimerGate:
 				node.duration = gate["duration"]
 				node.time_remaining = gate["duration"]
 				node.running = false
@@ -292,19 +290,19 @@ func _parse_code(code: String) -> void:
 				node.last_input_value = false
 				node.output_value = false
 				node.output_gates = []
-			"OrGate":
+			OrGate:
 				node.input_gates = []
 				node.output_value = false
 				node.output_gates = []
-			"AndGate":
+			AndGate:
 				node.input_gates = []
 				node.output_value = false
 				node.output_gates = []
-			"NotGate":
+			NotGate:
 				node.input_gate = null
 				node.output_value = false
 				node.output_gates = []
-			"Turret":
+			Turret:
 				node.input_gate = null
 				node.shooting = false
 		if "input_gate" in gate:

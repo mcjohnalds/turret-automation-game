@@ -6,33 +6,27 @@
 [
   {
     "name": "proximity_sensor_1",
-    "class_name": "ProximitySensor",
   },
   {
     "name": "timer_1",
-    "class_name": "TimerGate",
     "duration": 2.0,
     "input_gate": "proximity_sensor_1"
   },
   {
     "name": "timer_2",
-    "class_name": "TimerGate",
     "duration": 7.0,
     "input_gate": "proximity_sensor_1"
   },
   {
     "name": "not_1",
-    "class_name": "NotGate",
     "input_gate": "timer_2"
   },
   {
     "name": "and_1",
-    "class_name": "AndGate",
     "input_gates": [ "timer_1", "not_1" ]
   },
   {
     "name": "turret_1",
-    "class_name": "Turret",
     "input_gate": "and_1"
   }
 ]
