@@ -43,7 +43,7 @@ func _physics_process(delta: float) -> void:
 		if enemy.is_on_floor():
 			enemy.velocity.y = 0.0
 		else:
-			enemy.velocity.y -= 9.8 * get_physics_process_delta_time()
+			enemy.velocity.y -= 9.8 * delta
 		if not enemy.nav_agent.is_navigation_finished():
 			var next := enemy.nav_agent.get_next_path_position()
 			enemy.nav_agent.velocity = enemy.nav_agent.max_speed * enemy.global_position.direction_to(next)
@@ -194,7 +194,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _on_enemy_velocity_computed(safe_velocity: Vector3, enemy: Enemy) -> void:
-	enemy.velocity = (Vector3(1.0, 0.0, 1.0) * safe_velocity).normalized() * safe_velocity.length()
+	var safe_velocity_xz := Vector3(safe_velocity.x, 0.0, safe_velocity.z)
+	var enemy_velocity_y := Vector3(0.0, enemy.velocity.y, 0.0)
+	enemy.velocity = safe_velocity_xz.normalized() * safe_velocity.length() + enemy_velocity_y
 	enemy.move_and_slide()
 
 
