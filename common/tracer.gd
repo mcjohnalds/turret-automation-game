@@ -1,6 +1,7 @@
 class_name Tracer
 extends Node3D
 
+const _SCENE := preload("res://common/tracer.tscn")
 @export var min_length := 2.0
 @export var max_length := 10.0
 @export var min_lifetime := 0.05
@@ -10,6 +11,14 @@ var end: Vector3
 var _trail_start_distance := 0.0
 var _trail_end_distance := 0.0
 var _lifetime := 0.0
+
+
+# TODO: make start and end members private?
+static func create(start_pos: Vector3, end_pos: Vector3) -> Tracer:
+	var tracer: Tracer = _SCENE.instantiate()
+	tracer.start = start_pos
+	tracer.end = end_pos
+	return tracer
 
 
 func _enter_tree() -> void:

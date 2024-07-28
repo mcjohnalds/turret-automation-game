@@ -1,7 +1,5 @@
-- Program editor
-- Make sensors detect
 - Make guns shoot enemies
-- Turrets have cooldown
+- Energy drain
 
 [
   {
@@ -28,5 +26,15 @@
   {
     "name": "turret_1",
     "input_gate": "and_1"
+  }
+]
+
+[
+  {
+    "name": "proximity_sensor_1",
+  },
+  {
+    "name": "turret_1",
+    "input_gate": "proximity_sensor_1"
   }
 ]

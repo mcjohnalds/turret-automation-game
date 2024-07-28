@@ -86,8 +86,15 @@ func _physics_process(delta: float) -> void:
 		_update_gate_recursive(gate)
 	for gate in get_tree().get_nodes_in_group("gates"):
 		if gate is Turret:
+			gate.shoot_cooldown_remaining -= delta
 			if gate.input_gate and gate.input_gate.output_value:
 				gate.shooting = true
+				if gate.shoot_cooldown_remaining <= 0.0:
+					for enemy: Enemy in get_tree().get_nodes_in_group("enemies"):
+						if gate.global_position.distance_to(enemy.global_position) < _SENSOR_RADIUS:
+							if not enemy.is_queued_for_deletion():
+								_shoot_turret_at_enemy(gate, enemy)
+								break
 			gate.label_3d.text = "%s shooting=%s" % [gate.name, gate.shooting]
 		elif gate is TimerGate:
 			var input_value: bool = gate.input_gate and gate.input_gate.output_value
@@ -221,6 +228,7 @@ func _update_gate_recursive(gate: Variant) -> void:
 			_update_gate_recursive(g)
 
 
+# TODO: handle case where code is missing a gate
 func _parse_code(code: String) -> void:
 	var json := JSON.new()
 	var error := json.parse(code)
@@ -335,3 +343,12 @@ func _expect_gate_field_input_gates(gate: Dictionary) -> Error:
 			push_error("Expected gate.input_gates[n] to be string")
 			return ERR_INVALID_DATA
 	return OK
+
+
+func _shoot_turret_at_enemy(turret: Turret, enemy: Enemy) -> void:
+	var tracer := Tracer.create(turret.global_position + 0.5 * Vector3.UP, enemy.global_position + Vector3.UP)
+	tracer.speed = 50.0
+	tracer.min_lifetime = 0.2
+	add_child(tracer)
+	enemy.queue_free()
+	turret.shoot_cooldown_remaining = Turret.SHOOT_COOLDOWN

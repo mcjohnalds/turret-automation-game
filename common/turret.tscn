@@ -12,7 +12,7 @@ material = SubResource("StandardMaterial3D_r4ms8")
 script = ExtResource("1_a6ca3")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, 0.5, 2.08165e-12)
 mesh = SubResource("BoxMesh_4diqa")
 
 [node name="Label3D" type="Label3D" parent="."]
