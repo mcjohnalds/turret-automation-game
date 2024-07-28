@@ -1,5 +1,5 @@
-- Make guns shoot enemies
-- Energy drain
+- Money
+- Playtest
 
 [
   {

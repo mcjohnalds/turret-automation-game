@@ -10,7 +10,8 @@ const _and_gate_scene := preload("res://common/and_gate.tscn")
 const _not_gate_scene := preload("res://common/not_gate.tscn")
 const _timer_gate_scene := preload("res://common/timer_gate.tscn")
 const _proximity_sensor_scene := preload("res://common/proximity_sensor.tscn")
-const _SENSOR_RADIUS = 6.0
+const _SENSOR_RADIUS := 6.0
+const _ENERGY_THRESHOLD := 0.2
 var _turret_ghost: Turret
 var _proximity_sensor_ghost: ProximitySensor
 var _next_proximity_sensor_id := 1
@@ -19,11 +20,14 @@ var _next_and_gate_id := 1
 var _next_not_gate_id := 1
 var _next_timer_gate_id := 1
 var _next_turret_id := 1
+var _energy := 1.0
+var _energy_cooldown_active := false
 # A gate can be a ProximitySensor, OrGate, AndGate, TimerGate, or Turret
 @onready var _player: KinematicFpsController = %Player
 @onready var _heart: Heart = %Heart
 @onready var _code_edit: CodeEdit = %CodeEdit
 @onready var _fail_camera: Camera3D = %FailCamera
+@onready var _energy_bar_control: Control = %EnergyBarControl
 
 
 func _ready() -> void:
@@ -89,8 +93,11 @@ func _physics_process(delta: float) -> void:
 	for gate in get_tree().get_nodes_in_group("gates"):
 		if gate is Turret:
 			gate.shoot_cooldown_remaining -= delta
-			if gate.input_gate and gate.input_gate.output_value:
+			if gate.input_gate and gate.input_gate.output_value and not _energy_cooldown_active:
 				gate.shooting = true
+				_energy -= 0.2 * delta
+				if _energy <= 0.0:
+					_energy_cooldown_active = true
 				if gate.shoot_cooldown_remaining <= 0.0:
 					for enemy: Enemy in get_tree().get_nodes_in_group("enemies"):
 						if gate.global_position.distance_to(enemy.global_position) < _SENSOR_RADIUS:
@@ -113,6 +120,11 @@ func _physics_process(delta: float) -> void:
 		_fail_camera.current = true
 		process_mode = PROCESS_MODE_DISABLED
 	_heart.health_bar_control.foreground.anchor_right = _heart.health / _heart.MAX_HEALTH
+	_energy += 0.1 * delta
+	_energy = clampf(_energy, 0.0, 1.0)
+	if _energy >= _ENERGY_THRESHOLD:
+		_energy_cooldown_active = false
+	_energy_bar_control.foreground.anchor_right = _energy
 
 
 func _unhandled_input(event: InputEvent) -> void:
