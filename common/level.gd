@@ -11,6 +11,8 @@ const _not_gate_scene := preload("res://common/not_gate.tscn")
 const _button_gate_scene := preload("res://common/button_gate.tscn")
 const _pulse_timer_gate_scene := preload("res://common/pulse_timer_gate.tscn")
 const _proximity_sensor_scene := preload("res://common/proximity_sensor.tscn")
+const _player_blue_energized_material := preload("res://common/player_blue_energized_material.tres")
+const _wire_scene := preload("res://common/wire.tscn")
 const _SENSOR_RADIUS := 6.0
 const _ENERGY_THRESHOLD := 0.2
 var _turret_ghost: Turret
@@ -24,6 +26,8 @@ var _next_button_gate_id := 1
 var _next_turret_id := 1
 var _energy := 1.0
 var _energy_cooldown_active := false
+var _create_wire_start_pin: Pin
+var _create_wire: Wire
 # A gate can be a ProximitySensor, OrGate, AndGate, PulseTimerGate, or Turret
 @onready var _player: KinematicFpsController = %Player
 @onready var _heart: Heart = %Heart
@@ -93,31 +97,40 @@ func _physics_process(delta: float) -> void:
 		elif gate is ButtonGate:
 			pass
 		else:
+			# TODO: do i need this?
 			gate.output_value = false
 	for gate in get_tree().get_nodes_in_group("gates"):
 		_update_gate_recursive(gate)
 	for gate in get_tree().get_nodes_in_group("gates"):
-		if gate is Turret:
-			if gate.input_gate and gate.input_gate.output_value and not _energy_cooldown_active:
-				gate.shooting = true
-				_energy -= 0.2 * delta
-				if _energy <= 0.0:
-					_energy_cooldown_active = true
-				gate.shoot_cooldown_remaining -= delta
-				if gate.shoot_cooldown_remaining <= 0.0:
-					for enemy: Enemy in get_tree().get_nodes_in_group("enemies"):
-						if gate.global_position.distance_to(enemy.global_position) < _SENSOR_RADIUS:
-							if not enemy.is_queued_for_deletion():
-								_shoot_turret_at_enemy(gate, enemy)
-								break
-			gate.label_3d.text = "%s shooting=%s" % [gate.name, gate.shooting]
-		elif gate is PulseTimerGate:
-			var input_value: bool = gate.input_gate and gate.input_gate.output_value
-			if input_value:
-				gate.pulses.push_back(gate.timer + gate.delay)
-			gate.label_3d.text = "%s output_value=%s pulses=%s" % [gate.name, gate.output_value, "[]" if gate.pulses.is_empty() else ("[%.1f, ...]" % gate.pulses[0])]
-		else:
-			gate.label_3d.text = "%s output_value=%s" % [gate.name, gate.output_value]
+		match gate.get_script():
+			Turret:
+				if gate.input_gate and gate.input_gate.output_value and not _energy_cooldown_active:
+					gate.shooting = true
+					_energy -= 0.2 * delta
+					if _energy <= 0.0:
+						_energy_cooldown_active = true
+					gate.shoot_cooldown_remaining -= delta
+					if gate.shoot_cooldown_remaining <= 0.0:
+						for enemy: Enemy in get_tree().get_nodes_in_group("enemies"):
+							if gate.global_position.distance_to(enemy.global_position) < _SENSOR_RADIUS:
+								if not enemy.is_queued_for_deletion():
+									_shoot_turret_at_enemy(gate, enemy)
+									break
+				gate.label_3d.text = "%s shooting=%s" % [gate.name, gate.shooting]
+			PulseTimerGate:
+				var input_value: bool = gate.input_gate and gate.input_gate.output_value
+				if input_value:
+					gate.pulses.push_back(gate.timer + gate.delay)
+				var pulses_text := "[]" if gate.pulses.is_empty() else "[%.1f, ...]" % gate.pulses[0]
+				gate.label_3d.text = "%s output_value=%s pulses=%s" % [gate.name, gate.output_value, pulses_text]
+			OrGate:
+				var or_gate: OrGate = gate
+				or_gate.output_pin.prong_mesh.material_override = (
+					_player_blue_energized_material if gate.output_value
+					else null
+				)
+			_:
+				gate.label_3d.text = "%s output_value=%s" % [gate.name, gate.output_value]
 	if _heart.health <= 0.0:
 		_heart.health = 0.0
 		_heart.visible = false
@@ -129,6 +142,19 @@ func _physics_process(delta: float) -> void:
 	if _energy >= _ENERGY_THRESHOLD:
 		_energy_cooldown_active = false
 	_energy_bar_control.foreground.anchor_right = _energy
+	if _create_wire:
+		var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT | Util.PhysicsLayer.USEABLE)
+		if collision:
+			if collision.collider is Pin:
+				_set_wire_end_position(_create_wire, collision.collider.global_position)
+			else:
+				_set_wire_end_position(_create_wire, collision.position)
+		else:
+			_set_wire_end_position(
+				_create_wire,
+				_player.get_camera().global_position
+					- 2.0 * _player.get_camera().global_basis.z
+			)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -143,12 +169,20 @@ func _unhandled_input(event: InputEvent) -> void:
 			enemy.global_position = collision.position
 			enemy.nav_agent.velocity_computed.connect(_on_enemy_velocity_computed.bind(enemy))
 			enemy.nav_agent.target_position = _heart.global_position
-		if e.keycode == KEY_E and e.pressed:
-			var collision := _player_camera_ray_cast(Util.PhysicsLayer.BUTTON)
-			if not collision or collision.collider is not ButtonGate:
-				return
-			var button: ButtonGate = collision.collider
-			button.output_value = not button.output_value
+		if event.is_action_pressed("use"):
+			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT | Util.PhysicsLayer.USEABLE)
+			if _create_wire:
+				if collision and collision.collider is Pin:
+					_finish_creating_wire(collision.collider)
+				else:
+					_cancel_creating_wire()
+			else:
+				if collision:
+					if collision.collider is ButtonGate:
+						var button: ButtonGate = collision.collider
+						button.output_value = not button.output_value
+					elif collision.collider is Pin:
+						_start_creating_wire(collision.collider)
 		if e.keycode == KEY_1 and not e.pressed:
 			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
 			if not collision:
@@ -172,9 +206,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
 			if not collision:
 				return
-			var gate: OrGate = _or_gate_scene.instantiate()
-			add_child(gate)
-			gate.global_position = collision.position
+			var gate := _spawn_gate(_or_gate_scene, collision)
 			gate.name = "or_%s" % _next_or_gate_id
 			_next_or_gate_id += 1
 		if e.keycode == KEY_4 and not e.pressed:
@@ -250,21 +282,28 @@ func _player_camera_ray_cast(collision_mask: int) -> Dictionary:
 # TODO: i can probably do this way more efficiently without recursion by
 # updating every node once in a careful order
 func _update_gate_recursive(gate: Variant) -> void:
-	if gate is OrGate:
-		for input in gate.input_gates:
-			if input.output_value:
-				gate.output_value = true
-	elif gate is AndGate:
-		if gate.input_gates.is_empty():
+	match gate.get_script():
+		OrGate:
 			gate.output_value = false
-		else:
-			gate.output_value = true
-			for input in gate.input_gates:
-				if not input.output_value:
-					gate.output_value = false
-	elif gate is NotGate:
-		if gate.input_gate:
-			gate.output_value = not gate.input_gate.output_value
+			for pin in gate.input_pins:
+				if (
+					not pin.wires.is_empty()
+					and pin.wires.keys()[0].get_parent().output_value
+				):
+					gate.output_value = true
+			for pin in gate.output_pin.wires:
+				_update_gate_recursive(pin.get_parent())
+		AndGate:
+			if gate.input_gates.is_empty():
+				gate.output_value = false
+			else:
+				gate.output_value = true
+				for input in gate.input_gates:
+					if not input.output_value:
+						gate.output_value = false
+		NotGate:
+			if gate.input_gate:
+				gate.output_value = not gate.input_gate.output_value
 	if "output_gates" in gate:
 		for g in gate.output_gates:
 			_update_gate_recursive(g)
@@ -301,8 +340,8 @@ func _parse_code(code: String) -> void:
 				if _expect_gate_field_type(gate, "input_gate", TYPE_STRING) != OK:
 					return
 			OrGate:
-				if _expect_gate_field_input_gates(gate) != OK:
-					return
+				push_error("OrGate not supported")
+				return
 			AndGate:
 				if _expect_gate_field_input_gates(gate) != OK:
 					return
@@ -345,10 +384,6 @@ func _parse_code(code: String) -> void:
 				pulse.input_gate = null
 				pulse.output_value = false
 				pulse.output_gates = []
-			OrGate:
-				node.input_gates = []
-				node.output_value = false
-				node.output_gates = []
 			AndGate:
 				node.input_gates = []
 				node.output_value = false
@@ -402,3 +437,94 @@ func _shoot_turret_at_enemy(turret: Turret, enemy: Enemy) -> void:
 	add_child(tracer)
 	enemy.queue_free()
 	turret.shoot_cooldown_remaining = Turret.SHOOT_COOLDOWN
+
+
+func _spawn_gate(scene: PackedScene, collision: Dictionary) -> Node3D:
+	var gate: Node3D = scene.instantiate()
+	var up: Vector3
+	if collision.normal.cross(Vector3.UP).is_zero_approx():
+		up = Vector3.MODEL_FRONT
+	else:
+		up = Vector3.UP
+	gate.basis = Basis.looking_at(collision.normal, up, true)
+	add_child(gate)
+	gate.global_position = collision.position
+	return gate
+
+
+func _is_input_pin(pin: Pin) -> bool:
+	var gate: Node3D = pin.get_parent()
+	return gate.input_pins.has(pin)
+
+
+func _remove_input_pin_wire(input_pin: Pin) -> void:
+	if input_pin.wires.size() != 1:
+		push_error("Expected input pin to have exactly one wire")
+		return
+	var wire: Wire = input_pin.wires.values()[0]
+	wire.queue_free()
+	var output_pin: Pin = input_pin.wires.keys()[0]
+	output_pin.wires.erase(input_pin)
+
+
+func _set_wire_end_position(wire: Wire, end: Vector3) -> void:
+	wire.scale.z = wire.global_position.distance_to(end)
+	var can_look_at := (
+		not wire.global_position.is_equal_approx(end)
+		and not wire
+			.global_position
+			.direction_to(end)
+			.cross(Vector3.UP)
+			.is_zero_approx()
+	)
+	if can_look_at:
+		wire.look_at(end, Vector3.UP, true)
+
+
+func _start_creating_wire(pin: Pin) -> void:
+	_create_wire_start_pin = pin
+	_create_wire = _wire_scene.instantiate()
+	add_child(_create_wire)
+	_create_wire.global_position = _create_wire_start_pin.global_position
+	_create_wire.scale.z = 0.0
+
+
+func _finish_creating_wire(end_pin: Pin) -> void:
+	var input_pin: Pin
+	if _is_input_pin(_create_wire_start_pin):
+		input_pin = _create_wire_start_pin
+	elif _is_input_pin(end_pin):
+		input_pin = end_pin
+	else:
+		_cancel_creating_wire()
+		return
+	var output_pin: Pin
+	if not _is_input_pin(_create_wire_start_pin):
+		output_pin = _create_wire_start_pin
+	elif not _is_input_pin(end_pin):
+		output_pin = end_pin
+	else:
+		_cancel_creating_wire()
+		return
+	if input_pin == output_pin:
+		_cancel_creating_wire()
+		return
+	# TODO: return early if user is creating a loop
+	#
+	# TODO: change this so we delete input wire on key
+	# press and depress
+	#
+	# If we reach this point, wire connection is valid
+	if not input_pin.wires.is_empty():
+		_remove_input_pin_wire(input_pin)
+	_set_wire_end_position(_create_wire, end_pin.global_position)
+	output_pin.wires[input_pin] = _create_wire
+	input_pin.wires[output_pin] = _create_wire
+	_create_wire = null
+	_create_wire_start_pin = null
+
+
+func _cancel_creating_wire() -> void:
+	_create_wire_start_pin = null
+	_create_wire.queue_free()
+	_create_wire = null

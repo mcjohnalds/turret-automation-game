@@ -1,6 +1,20 @@
-- Pulse timer
-- Button
-- Playtest
+- Component connection physical interface
+- Solo playtest with imaginary constraints
+- Inventory
+  - Limit component placement
+  - UI
+- Component vending machine
+- Money
+  - Get money on kill
+  - Spend money at vending machine
+- Energy upgrade
+- Restriction: cannot place turrets close to each other
+- Switch held item UI
+- Enemies drop physical money, remove money UI
+  - Money is a held item
+  - Place money in vending machine
+- Align component rotation with aim
+- Make wire snap to end of pin instead of middle
 
 [
   {
@@ -9,13 +23,13 @@
   {
     "name": "pulse_timer_1",
     "delay": 0.0,
-    "duration": 5.0,
+    "duration": 2.0,
     "input_gate": "proximity_sensor_1"
   },
   {
     "name": "pulse_timer_2",
     "delay": 5.0,
-    "duration": 5.0,
+    "duration": 10.0,
     "input_gate": "proximity_sensor_1"
   },
   {
@@ -51,19 +65,22 @@
   {
     "name": "turret_1",
     "input_gate": "proximity_sensor_1"
+  },
+  {
+    "name": "turret_2",
+    "input_gate": "proximity_sensor_1"
   }
 ]
 
 [
   {
-    "name": "proximity_sensor_1",
+    "name": "button_1",
   },
   {
-    "name": "turret_1",
-    "input_gate": "proximity_sensor_1"
+    "name": "button_2",
   },
   {
-    "name": "turret_2",
-    "input_gate": "proximity_sensor_1"
+    "name": "or_1",
+    "input_gates": ["button_1", "button_2"]
   }
 ]

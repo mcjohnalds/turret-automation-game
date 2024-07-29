@@ -3,7 +3,7 @@ class_name Util
 
 enum PhysicsLayer {
 	DEFAULT = 1 << 0,
-	BUTTON = 1 << 1,
+	USEABLE = 1 << 1,
 }
 
 ## Minimum positive 64-bit floating-point number > 0.

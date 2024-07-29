@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3 uid="uid://dldror0gv4ag5"]
+
+[ext_resource type="Material" uid="uid://yv30dmw81bec" path="res://common/player_blue_material.tres" id="1_hply4"]
+[ext_resource type="Script" path="res://common/wire.gd" id="1_rdtvm"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_t0s5v"]
+material = ExtResource("1_hply4")
+top_radius = 0.007
+bottom_radius = 0.007
+height = 1.0
+
+[node name="Wire" type="Node3D"]
+script = ExtResource("1_rdtvm")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0.5)
+cast_shadow = 0
+mesh = SubResource("CylinderMesh_t0s5v")
