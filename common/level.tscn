@@ -79,7 +79,8 @@ text = "1 turret
 3 or
 4 and
 5 not
-6 timer"
+6 pulse timer
+7 button"
 
 [node name="CodeEdit" type="CodeEdit" parent="."]
 unique_name_in_owner = true

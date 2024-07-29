@@ -1,6 +1,11 @@
 extends Object
 class_name Util
 
+enum PhysicsLayer {
+	DEFAULT = 1 << 0,
+	BUTTON = 1 << 1,
+}
+
 ## Minimum positive 64-bit floating-point number > 0.
 ## [br]0x0000000000000001
 const FLOAT64_MIN_SUBNORMAL: float = 2.0**-1074 # ≈ 4.9406564584124654e-324

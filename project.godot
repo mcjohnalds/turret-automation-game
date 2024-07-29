@@ -118,6 +118,11 @@ shoot={
 ]
 }
 
+[layer_names]
+
+3d_physics/layer_1="default"
+3d_physics/layer_2="button"
+
 [navigation]
 
 3d/default_cell_size=0.1
