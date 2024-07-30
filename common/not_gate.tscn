@@ -1,21 +1,39 @@
-[gd_scene load_steps=4 format=3 uid="uid://bb7b4xebdm52v"]
+[gd_scene load_steps=7 format=3 uid="uid://djyv5tge6xq7w"]
 
 [ext_resource type="Script" path="res://common/not_gate.gd" id="1_w03h4"]
+[ext_resource type="Material" uid="uid://yv30dmw81bec" path="res://common/player_blue_material.tres" id="2_ke1x5"]
+[ext_resource type="PackedScene" uid="uid://bucn8nsdbdsvh" path="res://common/pin.tscn" id="3_hkycm"]
+[ext_resource type="PackedScene" uid="uid://ff3oqsj7dv02" path="res://ui/custom_label.tscn" id="4_0eglk"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_d3l1x"]
-albedo_color = Color(0.192157, 0.235294, 0.709804, 1)
+[sub_resource type="BoxMesh" id="BoxMesh_ih373"]
+material = ExtResource("2_ke1x5")
+size = Vector3(0.5, 0.2, 0.5)
 
-[sub_resource type="BoxMesh" id="BoxMesh_omtsp"]
-material = SubResource("StandardMaterial3D_d3l1x")
-size = Vector3(0.2, 0.2, 0.2)
+[sub_resource type="ViewportTexture" id="ViewportTexture_iw6a3"]
+viewport_path = NodePath("SubViewport")
 
 [node name="NotGate" type="Node3D" groups=["gates"]]
 script = ExtResource("1_w03h4")
 
-[node name="Mesh" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_omtsp")
+[node name="Base" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0.1)
+mesh = SubResource("BoxMesh_ih373")
 
-[node name="Label3D" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
-billboard = 1
-text = "Label"
+[node name="InputPin" parent="." instance=ExtResource("3_hkycm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, -0.35, 0.1)
+
+[node name="OutputPin" parent="." instance=ExtResource("3_hkycm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0.1)
+
+[node name="Sprite3D" type="Sprite3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.21)
+texture = SubResource("ViewportTexture_iw6a3")
+
+[node name="SubViewport" type="SubViewport" parent="."]
+transparent_bg = true
+size = Vector2i(50, 50)
+
+[node name="Label" parent="SubViewport" instance=ExtResource("4_0eglk")]
+text = "NOT"
+horizontal_alignment = 1
+vertical_alignment = 1

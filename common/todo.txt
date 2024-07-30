@@ -30,6 +30,7 @@
   - Heart
   - Enemy
 - Textures
+- Simplify logic by removing Gate.output_value and adding Pin.value
 
 [
   {

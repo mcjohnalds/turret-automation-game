@@ -125,7 +125,7 @@ func _physics_process(delta: float) -> void:
 					gate.pulses.push_back(gate.timer + gate.delay)
 				var pulses_text := "[]" if gate.pulses.is_empty() else "[%.1f, ...]" % gate.pulses[0]
 				gate.label_3d.text = "%s output_value=%s pulses=%s" % [gate.name, gate.output_value, pulses_text]
-			OrGate, AndGate, ButtonGate:
+			OrGate, AndGate, NotGate, ButtonGate:
 				if "input_pins" in gate:
 					for pin in gate.input_pins:
 						pin.prong_mesh.material_override = (
@@ -215,9 +215,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
 			if not collision:
 				return
-			var gate: NotGate = _not_gate_scene.instantiate()
-			add_child(gate)
-			gate.global_position = collision.position
+			var gate := _spawn_gate(_not_gate_scene, collision)
 			gate.name = "not_%s" % _next_not_gate_id
 			_next_not_gate_id += 1
 		if e.keycode == KEY_6 and not e.pressed:
@@ -279,18 +277,17 @@ func _update_gate_recursive(gate: Variant) -> void:
 			for pin in gate.input_pins:
 				if _get_input_pin_value(pin):
 					gate.output_value = true
-			for pin in gate.output_pin.wires:
-				_update_gate_recursive(pin.get_parent())
 		AndGate:
 			gate.output_value = true
 			for pin in gate.input_pins:
 				if not _get_input_pin_value(pin):
 					gate.output_value = false
-			for pin in gate.output_pin.wires:
-				_update_gate_recursive(pin.get_parent())
 		NotGate:
-			if gate.input_gate:
-				gate.output_value = not gate.input_gate.output_value
+			var input_pin: Pin = gate.input_pins[0]
+			gate.output_value = not _get_input_pin_value(input_pin)
+	if "output_pin" in gate:
+		for pin in gate.output_pin.wires:
+			_update_gate_recursive(pin.get_parent())
 	if "output_gates" in gate:
 		for g in gate.output_gates:
 			_update_gate_recursive(g)
@@ -333,8 +330,8 @@ func _parse_code(code: String) -> void:
 				push_error("AndGate not supported")
 				return
 			NotGate:
-				if _expect_gate_field_type(gate, "input_gate", TYPE_STRING) != OK:
-					return
+				push_error("NotGate not supported")
+				return
 			Turret:
 				if _expect_gate_field_type(gate, "input_gate", TYPE_STRING) != OK:
 					return
@@ -372,14 +369,6 @@ func _parse_code(code: String) -> void:
 				pulse.input_gate = null
 				pulse.output_value = false
 				pulse.output_gates = []
-			AndGate:
-				node.input_gates = []
-				node.output_value = false
-				node.output_gates = []
-			NotGate:
-				node.input_gate = null
-				node.output_value = false
-				node.output_gates = []
 			Turret:
 				node.input_gate = null
 				node.shooting = false

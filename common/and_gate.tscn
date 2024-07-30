@@ -5,11 +5,11 @@
 [ext_resource type="PackedScene" uid="uid://bucn8nsdbdsvh" path="res://common/pin.tscn" id="3_54asn"]
 [ext_resource type="PackedScene" uid="uid://ff3oqsj7dv02" path="res://ui/custom_label.tscn" id="4_fstnd"]
 
-[sub_resource type="BoxMesh" id="BoxMesh_omtsp"]
+[sub_resource type="BoxMesh" id="BoxMesh_y7yaa"]
 material = ExtResource("2_m3718")
 size = Vector3(0.5, 0.2, 0.5)
 
-[sub_resource type="ViewportTexture" id="ViewportTexture_rpqe3"]
+[sub_resource type="ViewportTexture" id="ViewportTexture_puxrm"]
 viewport_path = NodePath("SubViewport")
 
 [node name="AndGate" type="Node3D" groups=["gates"]]
@@ -17,7 +17,7 @@ script = ExtResource("1_otl6l")
 
 [node name="Base" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0.1)
-mesh = SubResource("BoxMesh_omtsp")
+mesh = SubResource("BoxMesh_y7yaa")
 
 [node name="InputPin1" parent="." instance=ExtResource("3_54asn")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, -0.35, 0.1)
@@ -30,7 +30,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0.1)
 
 [node name="Sprite3D" type="Sprite3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.21)
-texture = SubResource("ViewportTexture_rpqe3")
+texture = SubResource("ViewportTexture_puxrm")
 
 [node name="SubViewport" type="SubViewport" parent="."]
 transparent_bg = true
