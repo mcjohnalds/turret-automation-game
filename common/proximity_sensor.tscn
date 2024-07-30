@@ -4,7 +4,7 @@
 [ext_resource type="Material" uid="uid://yv30dmw81bec" path="res://common/player_blue_material.tres" id="2_7lxvq"]
 [ext_resource type="PackedScene" uid="uid://bucn8nsdbdsvh" path="res://common/pin.tscn" id="3_yfto7"]
 [ext_resource type="Script" path="res://common/radius_hint.gd" id="4_m17hj"]
-[ext_resource type="Material" uid="uid://dk4lvfgioj0mn" path="res://common/radius_hint.tres" id="5_4ytum"]
+[ext_resource type="Material" uid="uid://dk4lvfgioj0mn" path="res://common/radius_hint_material.tres" id="5_a4y4y"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_ih373"]
 material = ExtResource("2_7lxvq")
@@ -14,7 +14,7 @@ size = Vector3(0.5, 0.2, 0.5)
 viewport_path = NodePath("SubViewport")
 
 [sub_resource type="SphereMesh" id="SphereMesh_x1ari"]
-material = ExtResource("5_4ytum")
+material = ExtResource("5_a4y4y")
 radius = 6.0
 height = 12.0
 

@@ -17,7 +17,6 @@ const _player_blue_energized_material := preload(
 const _wire_scene := preload("res://common/wire.tscn")
 const _SENSOR_RADIUS := 6.0
 const _ENERGY_THRESHOLD := 0.2
-var _turret_ghost: Turret
 var _next_proximity_sensor_id := 1
 var _next_or_gate_id := 1
 var _next_and_gate_id := 1
@@ -37,12 +36,6 @@ var _create_wire: Wire
 @onready var _energy_bar_control: Control = %EnergyBarControl
 
 
-func _ready() -> void:
-	_turret_ghost = _turret_scene.instantiate()
-	add_child(_turret_ghost)
-	_turret_ghost.label_3d.visible = false
-
-
 func _physics_process(delta: float) -> void:
 	for enemy: Enemy in get_tree().get_nodes_in_group("enemies"):
 		if enemy.is_on_floor():
@@ -54,15 +47,6 @@ func _physics_process(delta: float) -> void:
 			enemy.nav_agent.velocity = enemy.nav_agent.max_speed * enemy.global_position.direction_to(next)
 		if enemy.global_position.distance_to(_heart.global_position) < 2.0:
 			_heart.health -= delta * 4.0
-	if Input.is_key_pressed(KEY_1):
-		var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
-		if collision:
-			_turret_ghost.visible = true
-			_turret_ghost.global_position = collision.position
-		else:
-			_turret_ghost.visible = false
-	else:
-		_turret_ghost.visible = false
 	for gate in get_tree().get_nodes_in_group("gates"):
 		if gate is ProximitySensor:
 			gate.output_value = false
@@ -82,7 +66,7 @@ func _physics_process(delta: float) -> void:
 			else:
 				gate.output_value = gate.timer >= gate.pulses[0]
 		elif gate is Turret:
-			gate.shooting = false
+			pass
 		elif gate is ButtonGate:
 			pass
 		else:
@@ -93,19 +77,8 @@ func _physics_process(delta: float) -> void:
 	for gate in get_tree().get_nodes_in_group("gates"):
 		match gate.get_script():
 			Turret:
-				if gate.input_gate and gate.input_gate.output_value and not _energy_cooldown_active:
-					gate.shooting = true
-					_energy -= 0.2 * delta
-					if _energy <= 0.0:
-						_energy_cooldown_active = true
-					gate.shoot_cooldown_remaining -= delta
-					if gate.shoot_cooldown_remaining <= 0.0:
-						for enemy: Enemy in get_tree().get_nodes_in_group("enemies"):
-							if gate.global_position.distance_to(enemy.global_position) < _SENSOR_RADIUS:
-								if not enemy.is_queued_for_deletion():
-									_shoot_turret_at_enemy(gate, enemy)
-									break
-				gate.label_3d.text = "%s shooting=%s" % [gate.name, gate.shooting]
+				_update_turret_shooting(gate, delta)
+				_update_material_for_all_gate_pins(gate)
 			PulseTimerGate:
 				var ptg: PulseTimerGate = gate
 				if _get_input_pin_value(ptg.input_pins[0]):
@@ -149,10 +122,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
 			if not collision:
 				return
-			var turret: Turret = _turret_scene.instantiate()
-			add_child(turret)
-			turret.global_position = collision.position
-			turret.name = "turret_%s" % _next_turret_id
+			var gate := _spawn_gate(_turret_scene, collision)
+			gate.name = "turret_%s" % _next_turret_id
 			_next_turret_id += 1
 		if e.keycode == KEY_2 and not e.pressed:
 			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
@@ -309,8 +280,8 @@ func _parse_code(code: String) -> void:
 				push_error("NotGate not supported")
 				return
 			Turret:
-				if _expect_gate_field_type(gate, "input_gate", TYPE_STRING) != OK:
-					return
+				push_error("Turret not supported")
+				return
 			ButtonGate:
 				push_error("ButtonGate not supported")
 				return
@@ -333,9 +304,7 @@ func _parse_code(code: String) -> void:
 	for gate in json.data:
 		var node := get_node(gate.name)
 		match node.get_script():
-			Turret:
-				node.input_gate = null
-				node.shooting = false
+			pass
 		if "input_gate" in gate:
 			var input_node := get_node(gate["input_gate"])
 			node.input_gate = input_node
@@ -366,15 +335,6 @@ func _expect_gate_field_input_gates(gate: Dictionary) -> Error:
 			push_error("Expected gate.input_gates[n] to be string")
 			return ERR_INVALID_DATA
 	return OK
-
-
-func _shoot_turret_at_enemy(turret: Turret, enemy: Enemy) -> void:
-	var tracer := Tracer.create(turret.global_position + 0.5 * Vector3.UP, enemy.global_position + Vector3.UP)
-	tracer.speed = 50.0
-	tracer.min_lifetime = 0.2
-	add_child(tracer)
-	enemy.queue_free()
-	turret.shoot_cooldown_remaining = Turret.SHOOT_COOLDOWN
 
 
 func _spawn_gate(scene: PackedScene, collision: Dictionary) -> Node3D:
@@ -536,7 +496,55 @@ func _update_material_for_all_gate_pins(gate: Node3D) -> void:
 				_player_blue_energized_material if _get_input_pin_value(pin)
 				else null
 			)
-	gate.output_pin.prong_mesh.material_override = (
-		_player_blue_energized_material if gate.output_value
-		else null
-	)
+	if "output_pin" in gate:
+		gate.output_pin.prong_mesh.material_override = (
+			_player_blue_energized_material if gate.output_value
+			else null
+		)
+
+
+func _update_turret_shooting(turret: Turret, delta: float) -> void:
+	if (
+		not _get_input_pin_value(turret.input_pins[0])
+		or _energy_cooldown_active
+	):
+		turret.barrel.rotation = Vector3(0.25 * TAU, 0.0, 0.0)
+		turret.barrel.visible = false
+		turret.capsule.visible = false
+		return
+	turret.barrel.visible = true
+	turret.capsule.visible = true
+	_energy -= 0.2 * delta
+	if _energy <= 0.0:
+		_energy_cooldown_active = true
+	var target_enemy: Enemy = null
+	for enemy: Enemy in get_tree().get_nodes_in_group("enemies"):
+		if enemy.is_queued_for_deletion():
+			continue
+		var enemy_distance := turret.global_position.distance_to(
+			enemy.global_position
+		)
+		if enemy_distance > _SENSOR_RADIUS:
+			continue
+		if not target_enemy:
+			target_enemy = enemy
+			continue
+		var closest_enemy_distance := turret.global_position.distance_to(
+			target_enemy.global_position
+		)
+		if closest_enemy_distance < enemy_distance:
+			target_enemy = enemy
+	turret.shoot_cooldown_remaining -= delta
+	if turret.shoot_cooldown_remaining > 0.0:
+		return
+	if not target_enemy:
+		return
+	var target_position := target_enemy.global_position + Vector3.UP
+	turret.barrel.look_at(target_position, Vector3.UP, true)
+	# Shoot
+	var tracer := Tracer.create(turret.barrel.global_position, target_position)
+	tracer.speed = 50.0
+	tracer.min_lifetime = 0.2
+	add_child(tracer)
+	target_enemy.queue_free()
+	turret.shoot_cooldown_remaining = Turret.SHOOT_COOLDOWN

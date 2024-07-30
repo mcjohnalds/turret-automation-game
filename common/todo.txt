@@ -5,8 +5,9 @@
   - [x] NOT gate
   - [x] Pulse timer
   - [x] Prox sensor
-  - [ ] Turret
+  - [x] Turret
   - [ ] Remove code editor
+- Delete component button
 - Solo playtest with imaginary constraints
 - Inventory
   - Limit component placement
