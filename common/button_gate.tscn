@@ -1,40 +1,52 @@
-[gd_scene load_steps=6 format=3 uid="uid://dw413vki4bhq5"]
+[gd_scene load_steps=10 format=3 uid="uid://dw413vki4bhq5"]
 
 [ext_resource type="Script" path="res://common/button_gate.gd" id="1_3ougc"]
+[ext_resource type="Material" uid="uid://yv30dmw81bec" path="res://common/player_blue_material.tres" id="2_rncct"]
+[ext_resource type="PackedScene" uid="uid://bucn8nsdbdsvh" path="res://common/pin.tscn" id="3_n5ei4"]
+[ext_resource type="Material" uid="uid://b0d66y1cxp57v" path="res://common/focus_material.tres" id="4_m40c3"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_gfatn"]
+material = ExtResource("2_rncct")
+size = Vector3(0.5, 0.2, 0.5)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_d3l1x"]
 albedo_color = Color(0.192157, 0.235294, 0.709804, 1)
 
-[sub_resource type="BoxMesh" id="BoxMesh_omtsp"]
-material = SubResource("StandardMaterial3D_d3l1x")
-size = Vector3(0.2, 0.2, 0.2)
-
 [sub_resource type="SphereMesh" id="SphereMesh_74n4c"]
 material = SubResource("StandardMaterial3D_d3l1x")
-radius = 0.1
-height = 0.2
-radial_segments = 16
-rings = 8
+radius = 0.2
+height = 0.4
+radial_segments = 32
+rings = 16
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_dklmk"]
-size = Vector3(0.5, 0.5, 0.5)
+[sub_resource type="SphereMesh" id="SphereMesh_ajpew"]
+material = ExtResource("4_m40c3")
+radius = 0.22
+height = 0.44
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_7ntwn"]
+radius = 0.22
 
 [node name="ButtonGate" type="StaticBody3D" groups=["gates"]]
 collision_layer = 2
 collision_mask = 2
 script = ExtResource("1_3ougc")
 
-[node name="BaseMesh" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_omtsp")
+[node name="Base" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0.1)
+mesh = SubResource("BoxMesh_gfatn")
 
 [node name="ButtonMesh" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, 2.08165e-12, 0.2)
 mesh = SubResource("SphereMesh_74n4c")
 
-[node name="Label3D" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
-billboard = 1
-text = "Label"
+[node name="FocusMesh" type="MeshInstance3D" parent="." groups=["focus_meshes"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.2)
+mesh = SubResource("SphereMesh_ajpew")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-shape = SubResource("BoxShape3D_dklmk")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.2)
+shape = SubResource("SphereShape3D_7ntwn")
+
+[node name="OutputPin" parent="." instance=ExtResource("3_n5ei4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0.1)

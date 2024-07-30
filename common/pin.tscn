@@ -26,7 +26,7 @@ transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 mesh = SubResource("CylinderMesh_1jrv3")
 skeleton = NodePath("../..")
 
-[node name="FocusMesh" type="MeshInstance3D" parent="."]
+[node name="FocusMesh" type="MeshInstance3D" parent="." groups=["focus_meshes"]]
 visible = false
 mesh = SubResource("SphereMesh_hiot4")
 
