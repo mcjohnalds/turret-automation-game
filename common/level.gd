@@ -1,8 +1,6 @@
 extends Node3D
 class_name Level
 
-signal code_edit_opened
-signal code_edit_closed
 const _enemy_scene := preload("res://common/enemy.tscn")
 const _turret_scene := preload("res://common/turret.tscn")
 const _or_gate_scene := preload("res://common/or_gate.tscn")
@@ -17,13 +15,6 @@ const _player_blue_energized_material := preload(
 const _wire_scene := preload("res://common/wire.tscn")
 const _SENSOR_RADIUS := 6.0
 const _ENERGY_THRESHOLD := 0.2
-var _next_proximity_sensor_id := 1
-var _next_or_gate_id := 1
-var _next_and_gate_id := 1
-var _next_not_gate_id := 1
-var _next_pulse_timer_gate_id := 1
-var _next_button_gate_id := 1
-var _next_turret_id := 1
 var _energy := 1.0
 var _energy_cooldown_active := false
 var _create_wire_start_pin: Pin
@@ -31,7 +22,6 @@ var _create_wire: Wire
 # A gate can be a ProximitySensor, OrGate, AndGate, PulseTimerGate, or Turret
 @onready var _player: KinematicFpsController = %Player
 @onready var _heart: Heart = %Heart
-@onready var _code_edit: CodeEdit = %CodeEdit
 @onready var _fail_camera: Camera3D = %FailCamera
 @onready var _energy_bar_control: Control = %EnergyBarControl
 
@@ -65,13 +55,6 @@ func _physics_process(delta: float) -> void:
 				gate.output_value = false
 			else:
 				gate.output_value = gate.timer >= gate.pulses[0]
-		elif gate is Turret:
-			pass
-		elif gate is ButtonGate:
-			pass
-		else:
-			# TODO: do i need this?
-			gate.output_value = false
 	for gate in get_tree().get_nodes_in_group("gates"):
 		_update_gate_recursive(gate)
 	for gate in get_tree().get_nodes_in_group("gates"):
@@ -90,8 +73,6 @@ func _physics_process(delta: float) -> void:
 				_update_material_for_all_gate_pins(ptg)
 			OrGate, AndGate, NotGate, ButtonGate, ProximitySensor:
 				_update_material_for_all_gate_pins(gate)
-			_:
-				gate.label_3d.text = "%s output_value=%s" % [gate.name, gate.output_value]
 	if _heart.health <= 0.0:
 		_heart.health = 0.0
 		_heart.visible = false
@@ -122,60 +103,37 @@ func _unhandled_input(event: InputEvent) -> void:
 			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
 			if not collision:
 				return
-			var gate := _spawn_gate(_turret_scene, collision)
-			gate.name = "turret_%s" % _next_turret_id
-			_next_turret_id += 1
+			_spawn_gate(_turret_scene, collision)
 		if e.keycode == KEY_2 and not e.pressed:
 			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
 			if not collision:
 				return
-			var gate := _spawn_gate(_proximity_sensor_scene, collision)
-			gate.name = "proximity_sensor_%s" % _next_proximity_sensor_id
-			_next_proximity_sensor_id += 1
+			_spawn_gate(_proximity_sensor_scene, collision)
 		if e.keycode == KEY_3 and not e.pressed:
 			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
 			if not collision:
 				return
-			var gate := _spawn_gate(_or_gate_scene, collision)
-			gate.name = "or_%s" % _next_or_gate_id
-			_next_or_gate_id += 1
+			_spawn_gate(_or_gate_scene, collision)
 		if e.keycode == KEY_4 and not e.pressed:
 			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
 			if not collision:
 				return
-			var gate := _spawn_gate(_and_gate_scene, collision)
-			gate.name = "and_%s" % _next_and_gate_id
-			_next_and_gate_id += 1
+			_spawn_gate(_and_gate_scene, collision)
 		if e.keycode == KEY_5 and not e.pressed:
 			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
 			if not collision:
 				return
-			var gate := _spawn_gate(_not_gate_scene, collision)
-			gate.name = "not_%s" % _next_not_gate_id
-			_next_not_gate_id += 1
+			_spawn_gate(_not_gate_scene, collision)
 		if e.keycode == KEY_6 and not e.pressed:
 			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
 			if not collision:
 				return
-			var gate := _spawn_gate(_pulse_timer_gate_scene, collision)
-			gate.name = "pulse_timer_%s" % _next_pulse_timer_gate_id
-			_next_pulse_timer_gate_id += 1
+			_spawn_gate(_pulse_timer_gate_scene, collision)
 		if e.keycode == KEY_7 and not e.pressed:
 			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
 			if not collision:
 				return
-			var gate := _spawn_gate(_button_gate_scene, collision)
-			gate.name = "button_%s" % _next_button_gate_id
-			_next_button_gate_id += 1
-		if e.keycode == KEY_C and e.pressed:
-			_code_edit.visible = true
-			_code_edit.grab_focus()
-			code_edit_opened.emit()
-		if e.keycode == KEY_ESCAPE and e.pressed and _code_edit.visible:
-			_code_edit.visible = false
-			_parse_code(_code_edit.text)
-			get_viewport().set_input_as_handled()
-			code_edit_closed.emit()
+			_spawn_gate(_button_gate_scene, collision)
 	if event.is_action_pressed("use"):
 		var collision := _player_camera_ray_cast(
 			Util.PhysicsLayer.DEFAULT | Util.PhysicsLayer.USEABLE
@@ -186,13 +144,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			else:
 				_cancel_creating_wire()
 		else:
-			if collision:
-				if collision.collider is ButtonGate:
+			match collision.collider.get_script() if collision else null:
+				ButtonGate:
 					var button: ButtonGate = collision.collider
 					button.output_value = not button.output_value
-				elif collision.collider is Pin:
+				Pin:
 					_start_creating_wire(collision.collider)
-				elif collision.collider is ChangeDelayButton:
+				ChangeDelayButton:
 					_on_change_delay_button_pressed(collision.collider)
 
 
@@ -239,105 +197,9 @@ func _update_gate_recursive(gate: Variant) -> void:
 	if "output_pin" in gate:
 		for pin in gate.output_pin.wires:
 			_update_gate_recursive(pin.get_parent())
-	if "output_gates" in gate:
-		for g in gate.output_gates:
-			_update_gate_recursive(g)
 
 
-# TODO: handle case where code is missing a gate
-func _parse_code(code: String) -> void:
-	var json := JSON.new()
-	var error := json.parse(code)
-	if error != OK:
-		push_error("JSON parse error: ", json.get_error_message(), " at line ", json.get_error_line())
-		return
-	if typeof(json.data) != TYPE_ARRAY:
-		push_error("Expected root type to be array")
-		return
-	for gate in json.data:
-		if typeof(gate) != TYPE_DICTIONARY:
-			push_error("Expected root array element to be dictionary")
-			return
-		if _expect_gate_field_type(gate, "name", TYPE_STRING) != OK:
-			return
-		var node := get_node_or_null(gate.name)
-		if not node:
-			push_error('Node not found with name "%s"' % gate.name)
-			return
-		match node.get_script():
-			ProximitySensor:
-				pass
-			PulseTimerGate:
-				push_error("PulseTimerGate not supported")
-				return
-			OrGate:
-				push_error("OrGate not supported")
-				return
-			AndGate:
-				push_error("AndGate not supported")
-				return
-			NotGate:
-				push_error("NotGate not supported")
-				return
-			Turret:
-				push_error("Turret not supported")
-				return
-			ButtonGate:
-				push_error("ButtonGate not supported")
-				return
-			_:
-				push_error('Node "%s" is not a gate' % gate.name)
-				return
-	var output_gate_names: Array[String] = []
-	for node in get_tree().get_nodes_in_group("gates"):
-		if node is not Turret:
-			output_gate_names.append(node.name)
-	for gate in json.data:
-		if "input_gate" in gate and not output_gate_names.has(gate["input_gate"]):
-			push_error('Gate "%s.input_gate" is "%s" but no such gate exists' % [gate.name, gate["input_gate"]])
-			return
-		if "input_gates" in gate:
-			for input in gate["input_gates"]:
-				if not output_gate_names.has(input):
-					push_error('Gate "%s.input_gates" contains "%s" but not such gate exists' % [gate.name, input])
-					return
-	for gate in json.data:
-		var node := get_node(gate.name)
-		match node.get_script():
-			pass
-		if "input_gate" in gate:
-			var input_node := get_node(gate["input_gate"])
-			node.input_gate = input_node
-			input_node.output_gates.append(node)
-		if "input_gates" in gate:
-			node.input_gates = []
-			for input in gate["input_gates"]:
-				var input_node := get_node(input)
-				node.input_gates.append(input_node)
-				input_node.output_gates.append(node)
-
-
-func _expect_gate_field_type(gate: Dictionary, key: String, type: int) -> Error:
-	if key not in gate:
-		push_error("Expected gate to have %s field" % key)
-		return ERR_INVALID_DATA
-	if typeof(gate[key]) != type:
-		push_error("Expected gate.%s to be %s" % [key, type_string(type)])
-		return ERR_INVALID_DATA
-	return OK
-
-
-func _expect_gate_field_input_gates(gate: Dictionary) -> Error:
-	if _expect_gate_field_type(gate, "input_gates", TYPE_ARRAY) != OK:
-		return ERR_INVALID_DATA
-	for v in gate["input_gates"]:
-		if typeof(v) != TYPE_STRING:
-			push_error("Expected gate.input_gates[n] to be string")
-			return ERR_INVALID_DATA
-	return OK
-
-
-func _spawn_gate(scene: PackedScene, collision: Dictionary) -> Node3D:
+func _spawn_gate(scene: PackedScene, collision: Dictionary) -> void:
 	var gate: Node3D = scene.instantiate()
 	var up: Vector3
 	if collision.normal.cross(Vector3.UP).is_zero_approx():
@@ -347,7 +209,6 @@ func _spawn_gate(scene: PackedScene, collision: Dictionary) -> Node3D:
 	gate.basis = Basis.looking_at(collision.normal, up, true)
 	add_child(gate)
 	gate.global_position = collision.position
-	return gate
 
 
 func _is_input_pin(pin: Pin) -> bool:
@@ -508,15 +369,15 @@ func _update_turret_shooting(turret: Turret, delta: float) -> void:
 		not _get_input_pin_value(turret.input_pins[0])
 		or _energy_cooldown_active
 	):
-		turret.barrel.rotation = Vector3(0.25 * TAU, 0.0, 0.0)
+		turret.barrel.rotation = Vector3(-0.25 * TAU, 0.5 * TAU, 0.0)
 		turret.barrel.visible = false
 		turret.capsule.visible = false
 		return
-	turret.barrel.visible = true
-	turret.capsule.visible = true
 	_energy -= 0.2 * delta
 	if _energy <= 0.0:
 		_energy_cooldown_active = true
+	turret.barrel.visible = true
+	turret.capsule.visible = true
 	var target_enemy: Enemy = null
 	for enemy: Enemy in get_tree().get_nodes_in_group("enemies"):
 		if enemy.is_queued_for_deletion():

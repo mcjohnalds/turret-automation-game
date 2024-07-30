@@ -53,11 +53,13 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="RadiusHint" type="StaticBody3D" parent="."]
+visible = false
 collision_layer = 2
 collision_mask = 2
 script = ExtResource("4_m17hj")
 
 [node name="FocusMesh" type="MeshInstance3D" parent="RadiusHint" groups=["focus_meshes"]]
+visible = false
 mesh = SubResource("SphereMesh_x1ari")
 skeleton = NodePath("../../..")
 
