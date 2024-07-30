@@ -1,0 +1,25 @@
+[gd_scene load_steps=5 format=3 uid="uid://codu8sn46swqk"]
+
+[ext_resource type="Material" uid="uid://b0d66y1cxp57v" path="res://common/focus_material.tres" id="1_fbv6y"]
+[ext_resource type="Script" path="res://common/change_delay_button.gd" id="1_xncls"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_5itot"]
+material = ExtResource("1_fbv6y")
+radius = 0.032
+height = 0.064
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_4gvhn"]
+radius = 0.032
+
+[node name="ChangeDelayButton" type="StaticBody3D"]
+collision_layer = 2
+collision_mask = 2
+script = ExtResource("1_xncls")
+
+[node name="FocusMesh" type="MeshInstance3D" parent="." groups=["focus_meshes"]]
+visible = false
+mesh = SubResource("SphereMesh_5itot")
+skeleton = NodePath("../..")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_4gvhn")

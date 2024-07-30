@@ -1,21 +1,53 @@
-[gd_scene load_steps=4 format=3 uid="uid://dekgwnbebn77w"]
+[gd_scene load_steps=8 format=3 uid="uid://vr0qcihg4jgl"]
 
-[ext_resource type="Script" path="res://common/pulse_timer_gate.gd" id="1_tc4j2"]
+[ext_resource type="Script" path="res://common/pulse_timer_gate.gd" id="1_5n7yy"]
+[ext_resource type="Material" uid="uid://yv30dmw81bec" path="res://common/player_blue_material.tres" id="2_otqlo"]
+[ext_resource type="PackedScene" uid="uid://bucn8nsdbdsvh" path="res://common/pin.tscn" id="3_vau3h"]
+[ext_resource type="PackedScene" uid="uid://dekfmsue2o03a" path="res://ui/pulse_timer_ui.tscn" id="4_wn6su"]
+[ext_resource type="PackedScene" uid="uid://codu8sn46swqk" path="res://common/change_delay_button.tscn" id="5_loydy"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_d3l1x"]
-albedo_color = Color(0.192157, 0.235294, 0.709804, 1)
+[sub_resource type="BoxMesh" id="BoxMesh_r3tal"]
+material = ExtResource("2_otqlo")
+size = Vector3(0.5, 0.2, 0.5)
 
-[sub_resource type="BoxMesh" id="BoxMesh_omtsp"]
-material = SubResource("StandardMaterial3D_d3l1x")
-size = Vector3(0.2, 0.2, 0.2)
+[sub_resource type="ViewportTexture" id="ViewportTexture_i6krj"]
+viewport_path = NodePath("SubViewport")
 
 [node name="PulseTimerGate" type="Node3D" groups=["gates"]]
-script = ExtResource("1_tc4j2")
+script = ExtResource("1_5n7yy")
 
-[node name="Mesh" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_omtsp")
+[node name="Base" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0.1)
+mesh = SubResource("BoxMesh_r3tal")
 
-[node name="Label3D" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
-billboard = 1
-text = "Label"
+[node name="InputPin" parent="." instance=ExtResource("3_vau3h")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, -0.35, 0.1)
+
+[node name="OutputPin" parent="." instance=ExtResource("3_vau3h")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0.1)
+
+[node name="Sprite3D" type="Sprite3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.21)
+pixel_size = 0.001
+texture = SubResource("ViewportTexture_i6krj")
+
+[node name="SubViewport" type="SubViewport" parent="."]
+transparent_bg = true
+size = Vector2i(500, 500)
+
+[node name="PulseTimerUI" parent="SubViewport" instance=ExtResource("4_wn6su")]
+unique_name_in_owner = true
+offset_right = 0.0
+offset_bottom = 0.0
+
+[node name="DecreaseDelayButton" parent="." instance=ExtResource("5_loydy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.207283, -0.202886, 0.2)
+
+[node name="IncreaseDelayButton" parent="." instance=ExtResource("5_loydy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0496632, -0.202886, 0.2)
+
+[node name="DecreasePulseButton" parent="." instance=ExtResource("5_loydy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0524796, -0.202886, 0.2)
+
+[node name="IncreasePulseButton" parent="." instance=ExtResource("5_loydy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.210099, -0.202886, 0.2)

@@ -10,11 +10,11 @@ radial_segments = 16
 
 [sub_resource type="SphereMesh" id="SphereMesh_hiot4"]
 material = ExtResource("2_xumua")
-radius = 0.2
-height = 0.4
+radius = 0.138
+height = 0.276
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_7qnf1"]
-radius = 0.2
+radius = 0.138381
 
 [node name="Pin" type="StaticBody3D"]
 collision_layer = 2

@@ -120,22 +120,16 @@ func _physics_process(delta: float) -> void:
 									break
 				gate.label_3d.text = "%s shooting=%s" % [gate.name, gate.shooting]
 			PulseTimerGate:
-				var input_value: bool = gate.input_gate and gate.input_gate.output_value
-				if input_value:
-					gate.pulses.push_back(gate.timer + gate.delay)
-				var pulses_text := "[]" if gate.pulses.is_empty() else "[%.1f, ...]" % gate.pulses[0]
-				gate.label_3d.text = "%s output_value=%s pulses=%s" % [gate.name, gate.output_value, pulses_text]
+				var ptg: PulseTimerGate = gate
+				if _get_input_pin_value(ptg.input_pins[0]):
+					ptg.pulses.push_back(ptg.timer + ptg.delay)
+				ptg.pulse_timer_ui.pulse_timer_clock.delay = ptg.delay
+				ptg.pulse_timer_ui.pulse_timer_clock.duration = ptg.duration
+				ptg.pulse_timer_ui.pulse_timer_clock.pulses = ptg.pulses
+				ptg.pulse_timer_ui.pulse_timer_clock.timer = ptg.timer
+				_update_material_for_all_gate_pins(ptg)
 			OrGate, AndGate, NotGate, ButtonGate:
-				if "input_pins" in gate:
-					for pin in gate.input_pins:
-						pin.prong_mesh.material_override = (
-							_player_blue_energized_material if _get_input_pin_value(pin)
-							else null
-						)
-				gate.output_pin.prong_mesh.material_override = (
-					_player_blue_energized_material if gate.output_value
-					else null
-				)
+				_update_material_for_all_gate_pins(gate)
 			_:
 				gate.label_3d.text = "%s output_value=%s" % [gate.name, gate.output_value]
 	if _heart.health <= 0.0:
@@ -164,20 +158,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			enemy.global_position = collision.position
 			enemy.nav_agent.velocity_computed.connect(_on_enemy_velocity_computed.bind(enemy))
 			enemy.nav_agent.target_position = _heart.global_position
-		if event.is_action_pressed("use"):
-			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT | Util.PhysicsLayer.USEABLE)
-			if _create_wire:
-				if collision and collision.collider is Pin:
-					_finish_creating_wire(collision.collider)
-				else:
-					_cancel_creating_wire()
-			else:
-				if collision:
-					if collision.collider is ButtonGate:
-						var button: ButtonGate = collision.collider
-						button.output_value = not button.output_value
-					elif collision.collider is Pin:
-						_start_creating_wire(collision.collider)
 		if e.keycode == KEY_1 and not e.pressed:
 			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
 			if not collision:
@@ -222,9 +202,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
 			if not collision:
 				return
-			var gate: PulseTimerGate = _pulse_timer_gate_scene.instantiate()
-			add_child(gate)
-			gate.global_position = collision.position
+			var gate := _spawn_gate(_pulse_timer_gate_scene, collision)
 			gate.name = "pulse_timer_%s" % _next_pulse_timer_gate_id
 			_next_pulse_timer_gate_id += 1
 		if e.keycode == KEY_7 and not e.pressed:
@@ -243,6 +221,24 @@ func _unhandled_input(event: InputEvent) -> void:
 			_parse_code(_code_edit.text)
 			get_viewport().set_input_as_handled()
 			code_edit_closed.emit()
+	if event.is_action_pressed("use"):
+		var collision := _player_camera_ray_cast(
+			Util.PhysicsLayer.DEFAULT | Util.PhysicsLayer.USEABLE
+		)
+		if _create_wire:
+			if collision and collision.collider is Pin:
+				_finish_creating_wire(collision.collider)
+			else:
+				_cancel_creating_wire()
+		else:
+			if collision:
+				if collision.collider is ButtonGate:
+					var button: ButtonGate = collision.collider
+					button.output_value = not button.output_value
+				elif collision.collider is Pin:
+					_start_creating_wire(collision.collider)
+				elif collision.collider is ChangeDelayButton:
+					_on_change_delay_button_pressed(collision.collider)
 
 
 func _on_enemy_velocity_computed(safe_velocity: Vector3, enemy: Enemy) -> void:
@@ -317,12 +313,8 @@ func _parse_code(code: String) -> void:
 			ProximitySensor:
 				pass
 			PulseTimerGate:
-				if _expect_gate_field_type(gate, "delay", TYPE_FLOAT) != OK:
-					return
-				if _expect_gate_field_type(gate, "duration", TYPE_FLOAT) != OK:
-					return
-				if _expect_gate_field_type(gate, "input_gate", TYPE_STRING) != OK:
-					return
+				push_error("PulseTimerGate not supported")
+				return
 			OrGate:
 				push_error("OrGate not supported")
 				return
@@ -360,15 +352,6 @@ func _parse_code(code: String) -> void:
 			ProximitySensor:
 				node.output_value = false
 				node.output_gates = []
-			PulseTimerGate:
-				var pulse: PulseTimerGate = node
-				pulse.delay = gate["delay"]
-				pulse.duration = gate["duration"]
-				pulse.pulses = []
-				pulse.timer = 0
-				pulse.input_gate = null
-				pulse.output_value = false
-				pulse.output_gates = []
 			Turret:
 				node.input_gate = null
 				node.shooting = false
@@ -544,3 +527,33 @@ func _update_using() -> void:
 			collision.collider.focus_mesh.visible = true
 		ButtonGate:
 			collision.collider.focus_mesh.visible = not _create_wire
+		ChangeDelayButton:
+			collision.collider.focus_mesh.visible = not _create_wire
+
+
+func _on_change_delay_button_pressed(
+	change_delay_button: ChangeDelayButton
+) -> void:
+	var gate: PulseTimerGate = change_delay_button.get_parent()
+	match change_delay_button:
+		gate.decrease_delay_button:
+			gate.delay -= 1.0
+		gate.increase_delay_button:
+			gate.delay += 1.0
+		gate.decrease_pulse_button:
+			gate.duration -= 1.0
+		gate.increase_pulse_button:
+			gate.duration += 1.0
+
+
+func _update_material_for_all_gate_pins(gate: Node3D) -> void:
+	if "input_pins" in gate:
+		for pin in gate.input_pins:
+			pin.prong_mesh.material_override = (
+				_player_blue_energized_material if _get_input_pin_value(pin)
+				else null
+			)
+	gate.output_pin.prong_mesh.material_override = (
+		_player_blue_energized_material if gate.output_value
+		else null
+	)

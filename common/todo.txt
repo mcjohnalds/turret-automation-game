@@ -2,7 +2,7 @@
   - [x] OR gate
   - [x] Button
   - [x] AND gate
-  - [ ] NOT gate
+  - [x] NOT gate
   - [ ] Pulse timer
   - [ ] Prox sensor
   - [ ] Turret
@@ -31,6 +31,9 @@
   - Enemy
 - Textures
 - Simplify logic by removing Gate.output_value and adding Pin.value
+- Redesign pulse timer screen
+  - Less 2D UI, more 3D UI
+  - Generally make it more intuitive
 
 [
   {
