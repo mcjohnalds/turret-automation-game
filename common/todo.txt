@@ -3,8 +3,8 @@
   - [x] Button
   - [x] AND gate
   - [x] NOT gate
-  - [ ] Pulse timer
-  - [ ] Prox sensor
+  - [x] Pulse timer
+  - [x] Prox sensor
   - [ ] Turret
   - [ ] Remove code editor
 - Solo playtest with imaginary constraints

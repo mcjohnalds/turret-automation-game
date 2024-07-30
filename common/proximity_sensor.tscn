@@ -1,33 +1,66 @@
-[gd_scene load_steps=6 format=3 uid="uid://gmlr8u4gpiww"]
+[gd_scene load_steps=10 format=3 uid="uid://bf15a11mjqvhp"]
 
 [ext_resource type="Script" path="res://common/proximity_sensor.gd" id="1_vjhrv"]
+[ext_resource type="Material" uid="uid://yv30dmw81bec" path="res://common/player_blue_material.tres" id="2_7lxvq"]
+[ext_resource type="PackedScene" uid="uid://bucn8nsdbdsvh" path="res://common/pin.tscn" id="3_yfto7"]
+[ext_resource type="Script" path="res://common/radius_hint.gd" id="4_m17hj"]
+[ext_resource type="Material" uid="uid://dk4lvfgioj0mn" path="res://common/radius_hint.tres" id="5_4ytum"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_d3l1x"]
-albedo_color = Color(0.192157, 0.235294, 0.709804, 1)
+[sub_resource type="BoxMesh" id="BoxMesh_ih373"]
+material = ExtResource("2_7lxvq")
+size = Vector3(0.5, 0.2, 0.5)
 
-[sub_resource type="BoxMesh" id="BoxMesh_omtsp"]
-material = SubResource("StandardMaterial3D_d3l1x")
-size = Vector3(0.2, 0.2, 0.2)
+[sub_resource type="ViewportTexture" id="ViewportTexture_iw6a3"]
+viewport_path = NodePath("SubViewport")
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_m8u3y"]
-transparency = 1
-cull_mode = 2
-shading_mode = 0
-albedo_color = Color(0.1917, 0.234892, 0.71, 0.415686)
+[sub_resource type="SphereMesh" id="SphereMesh_x1ari"]
+material = ExtResource("5_4ytum")
+radius = 6.0
+height = 12.0
 
-[sub_resource type="SphereMesh" id="SphereMesh_d2krb"]
-material = SubResource("StandardMaterial3D_m8u3y")
+[sub_resource type="SphereShape3D" id="SphereShape3D_1wbjj"]
+radius = 0.286805
 
 [node name="ProximitySensor" type="Node3D" groups=["gates"]]
 script = ExtResource("1_vjhrv")
 
-[node name="Mesh" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_omtsp")
+[node name="Base" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0.1)
+mesh = SubResource("BoxMesh_ih373")
 
-[node name="Sphere" type="MeshInstance3D" parent="."]
-mesh = SubResource("SphereMesh_d2krb")
+[node name="OutputPin" parent="." instance=ExtResource("3_yfto7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0.1)
 
-[node name="Label3D" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
-billboard = 1
-text = "Label"
+[node name="Sprite3D" type="Sprite3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.21)
+pixel_size = 0.001
+texture = SubResource("ViewportTexture_iw6a3")
+
+[node name="SubViewport" type="SubViewport" parent="."]
+transparent_bg = true
+size = Vector2i(500, 500)
+
+[node name="Label" type="Label" parent="SubViewport"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 80
+text = "PROXIMITY
+SESNOR"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RadiusHint" type="StaticBody3D" parent="."]
+collision_layer = 2
+collision_mask = 2
+script = ExtResource("4_m17hj")
+
+[node name="FocusMesh" type="MeshInstance3D" parent="RadiusHint" groups=["focus_meshes"]]
+mesh = SubResource("SphereMesh_x1ari")
+skeleton = NodePath("../../..")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RadiusHint"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.1)
+shape = SubResource("SphereShape3D_1wbjj")

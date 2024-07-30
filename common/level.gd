@@ -18,7 +18,6 @@ const _wire_scene := preload("res://common/wire.tscn")
 const _SENSOR_RADIUS := 6.0
 const _ENERGY_THRESHOLD := 0.2
 var _turret_ghost: Turret
-var _proximity_sensor_ghost: ProximitySensor
 var _next_proximity_sensor_id := 1
 var _next_or_gate_id := 1
 var _next_and_gate_id := 1
@@ -39,12 +38,6 @@ var _create_wire: Wire
 
 
 func _ready() -> void:
-	_proximity_sensor_ghost = _proximity_sensor_scene.instantiate()
-	add_child(_proximity_sensor_ghost)
-	var sphere: SphereMesh = _proximity_sensor_ghost.sphere.mesh
-	sphere.radius = _SENSOR_RADIUS
-	sphere.height = 2.0 * sphere.radius
-	_proximity_sensor_ghost.label_3d.visible = false
 	_turret_ghost = _turret_scene.instantiate()
 	add_child(_turret_ghost)
 	_turret_ghost.label_3d.visible = false
@@ -70,20 +63,14 @@ func _physics_process(delta: float) -> void:
 			_turret_ghost.visible = false
 	else:
 		_turret_ghost.visible = false
-	if Input.is_key_pressed(KEY_2):
-		var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
-		if collision:
-			_proximity_sensor_ghost.visible = true
-			_proximity_sensor_ghost.global_position = collision.position
-		else:
-			_proximity_sensor_ghost.visible = false
-	else:
-		_proximity_sensor_ghost.visible = false
 	for gate in get_tree().get_nodes_in_group("gates"):
 		if gate is ProximitySensor:
 			gate.output_value = false
 			for enemy: Enemy in get_tree().get_nodes_in_group("enemies"):
-				if enemy.global_position.distance_to(gate.global_position) <= _SENSOR_RADIUS:
+				if (
+					enemy.global_position.distance_to(gate.global_position)
+						<= _SENSOR_RADIUS
+				):
 					gate.output_value = true
 		elif gate is PulseTimerGate:
 			gate.timer += delta
@@ -128,7 +115,7 @@ func _physics_process(delta: float) -> void:
 				ptg.pulse_timer_ui.pulse_timer_clock.pulses = ptg.pulses
 				ptg.pulse_timer_ui.pulse_timer_clock.timer = ptg.timer
 				_update_material_for_all_gate_pins(ptg)
-			OrGate, AndGate, NotGate, ButtonGate:
+			OrGate, AndGate, NotGate, ButtonGate, ProximitySensor:
 				_update_material_for_all_gate_pins(gate)
 			_:
 				gate.label_3d.text = "%s output_value=%s" % [gate.name, gate.output_value]
@@ -171,11 +158,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
 			if not collision:
 				return
-			var proximity_sensor: ProximitySensor = _proximity_sensor_scene.instantiate()
-			add_child(proximity_sensor)
-			proximity_sensor.sphere.visible = false
-			proximity_sensor.global_position = collision.position
-			proximity_sensor.name = "proximity_sensor_%s" % _next_proximity_sensor_id
+			var gate := _spawn_gate(_proximity_sensor_scene, collision)
+			gate.name = "proximity_sensor_%s" % _next_proximity_sensor_id
 			_next_proximity_sensor_id += 1
 		if e.keycode == KEY_3 and not e.pressed:
 			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
@@ -349,9 +333,6 @@ func _parse_code(code: String) -> void:
 	for gate in json.data:
 		var node := get_node(gate.name)
 		match node.get_script():
-			ProximitySensor:
-				node.output_value = false
-				node.output_gates = []
 			Turret:
 				node.input_gate = null
 				node.shooting = false
@@ -528,6 +509,8 @@ func _update_using() -> void:
 		ButtonGate:
 			collision.collider.focus_mesh.visible = not _create_wire
 		ChangeDelayButton:
+			collision.collider.focus_mesh.visible = not _create_wire
+		RadiusHint:
 			collision.collider.focus_mesh.visible = not _create_wire
 
 
