@@ -1,7 +1,7 @@
 - Component connection physical interface
   - [x] OR gate
   - [x] Button
-  - [ ] AND gate
+  - [x] AND gate
   - [ ] NOT gate
   - [ ] Pulse timer
   - [ ] Prox sensor
@@ -25,6 +25,11 @@
 - Make wire snap to end of pin instead of middle
 - Make focus material change color when E is pressed
 - Make energized material have animated electricity texture
+- Meshes
+  - Gates
+  - Heart
+  - Enemy
+- Textures
 
 [
   {

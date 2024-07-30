@@ -11,7 +11,9 @@ const _not_gate_scene := preload("res://common/not_gate.tscn")
 const _button_gate_scene := preload("res://common/button_gate.tscn")
 const _pulse_timer_gate_scene := preload("res://common/pulse_timer_gate.tscn")
 const _proximity_sensor_scene := preload("res://common/proximity_sensor.tscn")
-const _player_blue_energized_material := preload("res://common/player_blue_energized_material.tres")
+const _player_blue_energized_material := preload(
+	"res://common/player_blue_energized_material.tres"
+)
 const _wire_scene := preload("res://common/wire.tscn")
 const _SENSOR_RADIUS := 6.0
 const _ENERGY_THRESHOLD := 0.2
@@ -123,7 +125,7 @@ func _physics_process(delta: float) -> void:
 					gate.pulses.push_back(gate.timer + gate.delay)
 				var pulses_text := "[]" if gate.pulses.is_empty() else "[%.1f, ...]" % gate.pulses[0]
 				gate.label_3d.text = "%s output_value=%s pulses=%s" % [gate.name, gate.output_value, pulses_text]
-			OrGate, ButtonGate:
+			OrGate, AndGate, ButtonGate:
 				if "input_pins" in gate:
 					for pin in gate.input_pins:
 						pin.prong_mesh.material_override = (
@@ -206,9 +208,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
 			if not collision:
 				return
-			var gate: AndGate = _and_gate_scene.instantiate()
-			add_child(gate)
-			gate.global_position = collision.position
+			var gate := _spawn_gate(_and_gate_scene, collision)
 			gate.name = "and_%s" % _next_and_gate_id
 			_next_and_gate_id += 1
 		if e.keycode == KEY_5 and not e.pressed:
@@ -282,13 +282,12 @@ func _update_gate_recursive(gate: Variant) -> void:
 			for pin in gate.output_pin.wires:
 				_update_gate_recursive(pin.get_parent())
 		AndGate:
-			if gate.input_gates.is_empty():
-				gate.output_value = false
-			else:
-				gate.output_value = true
-				for input in gate.input_gates:
-					if not input.output_value:
-						gate.output_value = false
+			gate.output_value = true
+			for pin in gate.input_pins:
+				if not _get_input_pin_value(pin):
+					gate.output_value = false
+			for pin in gate.output_pin.wires:
+				_update_gate_recursive(pin.get_parent())
 		NotGate:
 			if gate.input_gate:
 				gate.output_value = not gate.input_gate.output_value
@@ -331,8 +330,8 @@ func _parse_code(code: String) -> void:
 				push_error("OrGate not supported")
 				return
 			AndGate:
-				if _expect_gate_field_input_gates(gate) != OK:
-					return
+				push_error("AndGate not supported")
+				return
 			NotGate:
 				if _expect_gate_field_type(gate, "input_gate", TYPE_STRING) != OK:
 					return
