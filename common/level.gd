@@ -1,6 +1,16 @@
 extends Node3D
 class_name Level
 
+const PRICES := {
+	turret = 10,
+	proximity_sensor = 10,
+	or_gate = 1,
+	and_gate = 1,
+	not_gate = 1,
+	pulse_timer = 1,
+	button = 1,
+	energy_regen = 1,
+}
 const _MAX_ENERGY := 10.0
 const _enemy_scene := preload("res://common/enemy.tscn")
 const _turret_scene := preload("res://common/turret.tscn")
@@ -18,11 +28,18 @@ const _SENSOR_RADIUS := 6.0
 var _energy := _MAX_ENERGY
 var _create_wire_start_pin: Pin
 var _create_wire: Wire
+var _money := 100
 # A gate can be a ProximitySensor, OrGate, AndGate, PulseTimerGate, or Turret
 @onready var _player: KinematicFpsController = %Player
 @onready var _heart: Heart = %Heart
 @onready var _fail_camera: Camera3D = %FailCamera
 @onready var _energy_bar_control: Control = %EnergyBarControl
+@onready var _instructions_label: Label = %InstructionsLabel
+@onready var _instructions_label_format_string = _instructions_label.text
+
+
+func _ready() -> void:
+	pass
 
 
 func _physics_process(delta: float) -> void:
@@ -82,6 +99,9 @@ func _physics_process(delta: float) -> void:
 	_energy = clampf(_energy, 0.0, _MAX_ENERGY)
 	_energy_bar_control.foreground.anchor_right = _energy / _MAX_ENERGY
 	_update_using()
+	_instructions_label.text = _instructions_label_format_string.format(
+		PRICES.merged({ "money": _money })
+	)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -96,41 +116,47 @@ func _unhandled_input(event: InputEvent) -> void:
 			enemy.global_position = collision.position
 			enemy.nav_agent.velocity_computed.connect(_on_enemy_velocity_computed.bind(enemy))
 			enemy.nav_agent.target_position = _heart.global_position
-		if e.keycode == KEY_1 and not e.pressed:
+		if e.keycode >= KEY_1 and e.keycode <= KEY_7 and e.pressed:
+			var scene: PackedScene
+			var item: String
+			match e.keycode:
+				KEY_1:
+					scene = _turret_scene
+					item = "turret"
+				KEY_2:
+					scene = _proximity_sensor_scene
+					item = "proximity_sensor"
+				KEY_3:
+					scene = _or_gate_scene
+					item = "or_gate"
+				KEY_4:
+					scene = _and_gate_scene
+					item = "and_gate"
+				KEY_5:
+					scene = _not_gate_scene
+					item = "not_gate"
+				KEY_6:
+					scene = _pulse_timer_gate_scene
+					item = "pulse_timer"
+				KEY_7:
+					scene = _button_gate_scene
+					item = "button"
 			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
 			if not collision:
 				return
-			_spawn_gate(_turret_scene, collision)
-		if e.keycode == KEY_2 and not e.pressed:
-			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
-			if not collision:
+			var price: int = PRICES[item]
+			if price > _money:
 				return
-			_spawn_gate(_proximity_sensor_scene, collision)
-		if e.keycode == KEY_3 and not e.pressed:
-			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
-			if not collision:
-				return
-			_spawn_gate(_or_gate_scene, collision)
-		if e.keycode == KEY_4 and not e.pressed:
-			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
-			if not collision:
-				return
-			_spawn_gate(_and_gate_scene, collision)
-		if e.keycode == KEY_5 and not e.pressed:
-			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
-			if not collision:
-				return
-			_spawn_gate(_not_gate_scene, collision)
-		if e.keycode == KEY_6 and not e.pressed:
-			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
-			if not collision:
-				return
-			_spawn_gate(_pulse_timer_gate_scene, collision)
-		if e.keycode == KEY_7 and not e.pressed:
-			var collision := _player_camera_ray_cast(Util.PhysicsLayer.DEFAULT)
-			if not collision:
-				return
-			_spawn_gate(_button_gate_scene, collision)
+			_money -= price
+			var gate: Node3D = scene.instantiate()
+			var up: Vector3
+			if collision.normal.cross(Vector3.UP).is_zero_approx():
+				up = Vector3.MODEL_FRONT
+			else:
+				up = Vector3.UP
+			gate.basis = Basis.looking_at(collision.normal, up, true)
+			add_child(gate)
+			gate.global_position = collision.position
 	if event.is_action_pressed("primary"):
 		var collision := _player_camera_ray_cast(
 			Util.PhysicsLayer.DEFAULT | Util.PhysicsLayer.USEABLE
@@ -159,7 +185,26 @@ func _unhandled_input(event: InputEvent) -> void:
 		match n.get_script():
 			Pin:
 				_remove_pin_wires(n)
-			NotGate, OrGate, AndGate, ProximitySensor, ButtonGate, PulseTimerGate, Turret:
+			NotGate:
+				_money += PRICES.not_gate
+				_queue_free_gate(n)
+			OrGate:
+				_money += PRICES.or_gate
+				_queue_free_gate(n)
+			AndGate:
+				_money += PRICES.and_gate
+				_queue_free_gate(n)
+			ProximitySensor:
+				_money += PRICES.proximity_sensor
+				_queue_free_gate(n)
+			ButtonGate:
+				_money += PRICES.button
+				_queue_free_gate(n)
+			PulseTimerGate:
+				_money += PRICES.pulse_timer
+				_queue_free_gate(n)
+			Turret:
+				_money += PRICES.turret
 				_queue_free_gate(n)
 			ChangeDelayButton:
 				_queue_free_gate(n.get_parent())
@@ -217,18 +262,6 @@ func _update_gate_recursive(gate: Variant) -> void:
 	if "output_pin" in gate:
 		for pin in gate.output_pin.wires:
 			_update_gate_recursive(pin.get_parent())
-
-
-func _spawn_gate(scene: PackedScene, collision: Dictionary) -> void:
-	var gate: Node3D = scene.instantiate()
-	var up: Vector3
-	if collision.normal.cross(Vector3.UP).is_zero_approx():
-		up = Vector3.MODEL_FRONT
-	else:
-		up = Vector3.UP
-	gate.basis = Basis.looking_at(collision.normal, up, true)
-	add_child(gate)
-	gate.global_position = collision.position
 
 
 func _is_input_pin(pin: Pin) -> bool:

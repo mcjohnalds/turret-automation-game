@@ -3,6 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://2oxdgu03lnbk" path="res://kinematic_fps_controller/kinematic_fps_controller.tscn" id="1_kuwff"]
 [ext_resource type="Script" path="res://common/level.gd" id="1_y6gtq"]
 [ext_resource type="PackedScene" uid="uid://dmhvyyd7ii2uy" path="res://common/heart.tscn" id="3_5ilig"]
+[ext_resource type="Material" uid="uid://d0hwhbqr26myv" path="res://common/ground_material.tres" id="3_vlb7p"]
 [ext_resource type="PackedScene" uid="uid://bnnasrfs5o4e0" path="res://ui/energy_bar_control.tscn" id="4_wkik2"]
 
 [sub_resource type="NavigationMesh" id="NavigationMesh_c7y1b"]
@@ -30,11 +31,8 @@ glow_enabled = true
 [sub_resource type="BoxShape3D" id="BoxShape3D_iafqw"]
 size = Vector3(100, 1, 100)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rjmij"]
-albedo_color = Color(0.140447, 0.140447, 0.140447, 1)
-
 [sub_resource type="PlaneMesh" id="PlaneMesh_tq06h"]
-material = SubResource("StandardMaterial3D_rjmij")
+material = ExtResource("3_vlb7p")
 size = Vector2(100, 100)
 
 [node name="Level" type="NavigationRegion3D"]
@@ -67,25 +65,28 @@ unique_name_in_owner = true
 [node name="EnergyBarControl" parent="." instance=ExtResource("4_wkik2")]
 unique_name_in_owner = true
 
-[node name="Label" type="Label" parent="."]
+[node name="InstructionsLabel" type="Label" parent="."]
+unique_name_in_owner = true
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_top = -21.0
 offset_right = 40.0
 grow_vertical = 0
-text = "Left click interact
-Right click delete
-1 spawn turret
-2 spawn proximity sensor
-3 spawn or gate
-4 spawn and gate
-5 spawn not gate
-6 spawn pulse timer
-7 spawn button
-Q spawn enemy
-Escape pause
-F noclip"
+text = "${money}
+---
+Left-click - interact
+Right-click - delete
+1 - spawn turret ${turret}
+2 - spawn proximity sensor ${proximity_sensor}
+3 - spawn or gate ${or_gate}
+4 - spawn and gate ${and_gate}
+5 - spawn not gate ${not_gate}
+6 - spawn pulse timer ${pulse_timer}
+7 - spawn button ${button}
+Q - spawn enemy
+Escape - pause
+F - noclip"
 
 [node name="FailCamera" type="Camera3D" parent="."]
 unique_name_in_owner = true
