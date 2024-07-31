@@ -28,7 +28,6 @@
 - Left click instead of use?
 - Add "pulse timer" label to timer
 - Add input and output pin labels
-- Apply energized material to wires
 
 [
   {

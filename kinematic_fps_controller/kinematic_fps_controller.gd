@@ -20,7 +20,7 @@ class_name KinematicFpsController
 @export var head_bob_y_curve : Curve
 @export_group("Quake Camera Tilt")
 ## Speed at which the camera angle moves
-@export var quake_camera_tilt_speed := 0.1
+@export var quake_camera_tilt_speed := 6.0
 ## Rotation angle limit per move
 @export var quake_camera_tilt_angle_limit := 0.004
 @export_group("Movement")
@@ -243,7 +243,7 @@ func _physics_process(delta: float) -> void:
 		and not is_submerged
 		and not is_shuffling_feet
 	)
-	_update_quake_camera_tilt(input_horizontal)
+	_update_quake_camera_tilt(input_horizontal, delta)
 	if landed_on_floor_this_frame or is_entered_water:
 		_play_land_audio(landed_on_floor_this_frame, is_on_water)
 	elif is_exited_water:
@@ -327,17 +327,17 @@ func _input(event: InputEvent) -> void:
 			_damage(10.0)
 
 
-func _update_quake_camera_tilt(input_horizontal: Vector2) -> void:
+func _update_quake_camera_tilt(input_horizontal: Vector2, delta: float) -> void:
 	var target := input_horizontal.x
 	var direction := signf(target - _quake_camera_tilt_ratio)
 	var new_ratio := (
-		_quake_camera_tilt_ratio + quake_camera_tilt_speed * direction
+		_quake_camera_tilt_ratio + quake_camera_tilt_speed * direction * delta
 	)
 	var new_direction := signf(target - new_ratio)
 	if new_direction != direction:
 		_quake_camera_tilt_ratio = target
 	else:
-		_quake_camera_tilt_ratio += quake_camera_tilt_speed * direction
+		_quake_camera_tilt_ratio = new_ratio
 	_camera.rotation.z = lerp(
 		-quake_camera_tilt_angle_limit,
 		quake_camera_tilt_angle_limit,

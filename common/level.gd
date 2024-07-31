@@ -348,12 +348,8 @@ func _update_using() -> void:
 	match collision.collider.get_script() if collision else null:
 		Pin:
 			collision.collider.focus_mesh.visible = true
-		ProximitySensor, ButtonGate, Turret:
+		ProximitySensor, ButtonGate, Turret, ChangeDelayButton:
 			collision.collider.focus_mesh.visible = not _create_wire
-		ChangeDelayButton:
-			collision.collider.get_parent().focus_mesh.visible = (
-				not _create_wire
-			)
 
 
 func _on_change_delay_button_pressed(
@@ -374,15 +370,20 @@ func _on_change_delay_button_pressed(
 func _update_material_for_all_gate_pins(gate: Node3D) -> void:
 	if "input_pins" in gate:
 		for pin in gate.input_pins:
-			pin.prong_mesh.material_override = (
+			var material := (
 				_player_blue_energized_material if _get_input_pin_value(pin)
 				else null
 			)
+			pin.prong_mesh.material_override = material
 	if "output_pin" in gate:
-		gate.output_pin.prong_mesh.material_override = (
+		var material := (
 			_player_blue_energized_material if gate.output_value
 			else null
 		)
+		gate.output_pin.prong_mesh.material_override = material
+		for input_pin in gate.output_pin.wires:
+			var wire: Wire = gate.output_pin.wires[input_pin]
+			wire.mesh.material_override = material
 
 
 func _update_turret_shooting(turret: Turret, delta: float) -> void:
