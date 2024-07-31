@@ -74,16 +74,17 @@ anchor_bottom = 1.0
 offset_top = -21.0
 offset_right = 40.0
 grow_vertical = 0
-text = "1 turret
-2 proximity sensor
-3 or
-4 and
-5 not
-6 pulse timer
-7 button
+text = "Left click interact
+Right click delete
+1 spawn turret
+2 spawn proximity sensor
+3 spawn or gate
+4 spawn and gate
+5 spawn not gate
+6 spawn pulse timer
+7 spawn button
 Q spawn enemy
 Escape pause
-E use button/create wire
 F noclip"
 
 [node name="FailCamera" type="Camera3D" parent="."]

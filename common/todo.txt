@@ -1,13 +1,12 @@
-- Solo playtest with imaginary constraints
 - Inventory
   - Limit component placement
-  - UI
 - Component vending machine
 - Money
   - Get money on kill
   - Spend money at vending machine
-- Energy upgrade
 - Restriction: cannot place turrets close to each other
+- Solo playtest with imaginary constraints
+- Energy upgrade
 - Switch held item UI
 - Enemies drop physical money, remove money UI
   - Money is a held item
@@ -28,6 +27,7 @@
 - Left click instead of use?
 - Add "pulse timer" label to timer
 - Add input and output pin labels
+- Connect with bezier curves
 
 [
   {

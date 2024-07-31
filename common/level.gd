@@ -1,6 +1,7 @@
 extends Node3D
 class_name Level
 
+const _MAX_ENERGY := 10.0
 const _enemy_scene := preload("res://common/enemy.tscn")
 const _turret_scene := preload("res://common/turret.tscn")
 const _or_gate_scene := preload("res://common/or_gate.tscn")
@@ -14,9 +15,7 @@ const _player_blue_energized_material := preload(
 )
 const _wire_scene := preload("res://common/wire.tscn")
 const _SENSOR_RADIUS := 6.0
-const _ENERGY_THRESHOLD := 0.2
-var _energy := 1.0
-var _energy_cooldown_active := false
+var _energy := _MAX_ENERGY
 var _create_wire_start_pin: Pin
 var _create_wire: Wire
 # A gate can be a ProximitySensor, OrGate, AndGate, PulseTimerGate, or Turret
@@ -79,11 +78,9 @@ func _physics_process(delta: float) -> void:
 		_fail_camera.current = true
 		process_mode = PROCESS_MODE_DISABLED
 	_heart.health_bar_control.foreground.anchor_right = _heart.health / _heart.MAX_HEALTH
-	_energy += 0.1 * delta
-	_energy = clampf(_energy, 0.0, 1.0)
-	if _energy >= _ENERGY_THRESHOLD:
-		_energy_cooldown_active = false
-	_energy_bar_control.foreground.anchor_right = _energy
+	_energy += delta
+	_energy = clampf(_energy, 0.0, _MAX_ENERGY)
+	_energy_bar_control.foreground.anchor_right = _energy / _MAX_ENERGY
 	_update_using()
 
 
@@ -134,7 +131,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			if not collision:
 				return
 			_spawn_gate(_button_gate_scene, collision)
-	if event.is_action_pressed("use"):
+	if event.is_action_pressed("primary"):
 		var collision := _player_camera_ray_cast(
 			Util.PhysicsLayer.DEFAULT | Util.PhysicsLayer.USEABLE
 		)
@@ -386,19 +383,18 @@ func _update_material_for_all_gate_pins(gate: Node3D) -> void:
 
 
 func _update_turret_shooting(turret: Turret, delta: float) -> void:
-	if (
-		not _get_input_pin_value(turret.input_pins[0])
-		or _energy_cooldown_active
-	):
-		turret.barrel.rotation = Vector3(-0.25 * TAU, 0.5 * TAU, 0.0)
-		turret.barrel.visible = false
-		turret.capsule.visible = false
+	var energized := _get_input_pin_value(turret.input_pins[0])
+	for mesh: MeshInstance3D in turret.find_children("*", "MeshInstance3D"):
+		if not mesh.is_in_group("energizeable_meshes"):
+			continue
+		mesh.material_override = (
+			_player_blue_energized_material if energized else null
+		)
+	if not energized:
 		return
-	_energy -= 0.2 * delta
+	_energy -= 0.9 * delta
 	if _energy <= 0.0:
-		_energy_cooldown_active = true
-	turret.barrel.visible = true
-	turret.capsule.visible = true
+		return
 	var target_enemy: Enemy = null
 	for enemy: Enemy in get_tree().get_nodes_in_group("enemies"):
 		if enemy.is_queued_for_deletion():
@@ -416,13 +412,15 @@ func _update_turret_shooting(turret: Turret, delta: float) -> void:
 		)
 		if closest_enemy_distance < enemy_distance:
 			target_enemy = enemy
+	var target_position: Vector3
+	if target_enemy:
+		target_position = target_enemy.global_position + 1.3 * Vector3.UP
+		turret.barrel.look_at(target_position, Vector3.UP, true)
 	turret.shoot_cooldown_remaining -= delta
 	if turret.shoot_cooldown_remaining > 0.0:
 		return
 	if not target_enemy:
 		return
-	var target_position := target_enemy.global_position + Vector3.UP
-	turret.barrel.look_at(target_position, Vector3.UP, true)
 	# Shoot
 	var tracer := Tracer.create(turret.barrel.global_position, target_position)
 	tracer.speed = 50.0
