@@ -1,4 +1,3 @@
-- Delete component button
 - Solo playtest with imaginary constraints
 - Inventory
   - Limit component placement
@@ -26,6 +25,10 @@
 - Redesign pulse timer screen
   - Less 2D UI, more 3D UI
   - Generally make it more intuitive
+- Left click instead of use?
+- Add "pulse timer" label to timer
+- Add input and output pin labels
+- Apply energized material to wires
 
 [
   {

@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://dw413vki4bhq5"]
+[gd_scene load_steps=11 format=3 uid="uid://dw413vki4bhq5"]
 
 [ext_resource type="Script" path="res://common/button_gate.gd" id="1_3ougc"]
 [ext_resource type="Material" uid="uid://yv30dmw81bec" path="res://common/player_blue_material.tres" id="2_rncct"]
@@ -25,7 +25,10 @@ radius = 0.22
 height = 0.44
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_7ntwn"]
-radius = 0.22
+radius = 0.2
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ac40a"]
+size = Vector3(0.5, 0.2, 0.5)
 
 [node name="ButtonGate" type="StaticBody3D" groups=["gates"]]
 collision_layer = 2
@@ -44,9 +47,13 @@ mesh = SubResource("SphereMesh_74n4c")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.2)
 mesh = SubResource("SphereMesh_ajpew")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+[node name="OutputPin" parent="." instance=ExtResource("3_n5ei4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0.1)
+
+[node name="CollisionShape3D1" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.2)
 shape = SubResource("SphereShape3D_7ntwn")
 
-[node name="OutputPin" parent="." instance=ExtResource("3_n5ei4")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0.1)
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0.1)
+shape = SubResource("BoxShape3D_ac40a")

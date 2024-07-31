@@ -152,6 +152,29 @@ func _unhandled_input(event: InputEvent) -> void:
 					_start_creating_wire(collision.collider)
 				ChangeDelayButton:
 					_on_change_delay_button_pressed(collision.collider)
+	if event.is_action_pressed("secondary"):
+		var collision := _player_camera_ray_cast(
+			Util.PhysicsLayer.DEFAULT | Util.PhysicsLayer.USEABLE
+		)
+		if not collision:
+			return
+		var n: Node3D = collision.collider
+		match n.get_script():
+			Pin:
+				_remove_pin_wires(n)
+			NotGate, OrGate, AndGate, ProximitySensor, ButtonGate, PulseTimerGate, Turret:
+				_queue_free_gate(n)
+			ChangeDelayButton:
+				_queue_free_gate(n.get_parent())
+
+
+func _queue_free_gate(gate: Node3D) -> void:
+	if "input_pins" in gate:
+		for pin in gate.input_pins:
+			_remove_pin_wires(pin)
+	if "output_pin" in gate:
+		_remove_pin_wires(gate.output_pin)
+	gate.queue_free()
 
 
 func _on_enemy_velocity_computed(safe_velocity: Vector3, enemy: Enemy) -> void:
@@ -216,15 +239,13 @@ func _is_input_pin(pin: Pin) -> bool:
 	return "input_pins" in gate and gate.input_pins.has(pin)
 
 
-func _remove_input_pin_wire(input_pin: Pin) -> void:
-	if input_pin.wires.size() != 1:
-		push_error("Expected input pin to have exactly one wire")
-		return
-	var wire: Wire = input_pin.wires.values()[0]
-	var output_pin: Pin = input_pin.wires.keys()[0]
-	wire.queue_free()
-	output_pin.wires.erase(input_pin)
-	input_pin.wires.erase(output_pin)
+func _remove_pin_wires(pin: Pin) -> void:
+	for output_pin in pin.wires:
+		var wire: Wire = pin.wires[output_pin]
+		wire.queue_free()
+		pin.wires.erase(output_pin)
+		output_pin.wires.erase(pin)
+
 
 
 func _set_wire_end_position(wire: Wire, end: Vector3) -> void:
@@ -248,7 +269,7 @@ func _start_creating_wire(pin: Pin) -> void:
 	_create_wire.global_position = _create_wire_start_pin.global_position
 	_create_wire.scale.z = 0.0
 	if _is_input_pin(pin) and not pin.wires.is_empty():
-		_remove_input_pin_wire(pin)
+		_remove_pin_wires(pin)
 
 
 func _finish_creating_wire(end_pin: Pin) -> void:
@@ -275,7 +296,7 @@ func _finish_creating_wire(end_pin: Pin) -> void:
 	#
 	# If we reach this point, wire connection is valid
 	if not input_pin.wires.is_empty():
-		_remove_input_pin_wire(input_pin)
+		_remove_pin_wires(input_pin)
 	_set_wire_end_position(_create_wire, end_pin.global_position)
 	output_pin.wires[input_pin] = _create_wire
 	input_pin.wires[output_pin] = _create_wire
@@ -327,12 +348,12 @@ func _update_using() -> void:
 	match collision.collider.get_script() if collision else null:
 		Pin:
 			collision.collider.focus_mesh.visible = true
-		ButtonGate:
+		ProximitySensor, ButtonGate, Turret:
 			collision.collider.focus_mesh.visible = not _create_wire
 		ChangeDelayButton:
-			collision.collider.focus_mesh.visible = not _create_wire
-		RadiusHint:
-			collision.collider.focus_mesh.visible = not _create_wire
+			collision.collider.get_parent().focus_mesh.visible = (
+				not _create_wire
+			)
 
 
 func _on_change_delay_button_pressed(

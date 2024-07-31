@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://vr0qcihg4jgl"]
+[gd_scene load_steps=9 format=3 uid="uid://vr0qcihg4jgl"]
 
 [ext_resource type="Script" path="res://common/pulse_timer_gate.gd" id="1_5n7yy"]
 [ext_resource type="Material" uid="uid://yv30dmw81bec" path="res://common/player_blue_material.tres" id="2_otqlo"]
@@ -13,7 +13,12 @@ size = Vector3(0.5, 0.2, 0.5)
 [sub_resource type="ViewportTexture" id="ViewportTexture_i6krj"]
 viewport_path = NodePath("SubViewport")
 
-[node name="PulseTimerGate" type="Node3D" groups=["gates"]]
+[sub_resource type="BoxShape3D" id="BoxShape3D_e03gi"]
+size = Vector3(0.5, 0.2, 0.5)
+
+[node name="PulseTimerGate" type="StaticBody3D" groups=["gates"]]
+collision_layer = 2
+collision_mask = 2
 script = ExtResource("1_5n7yy")
 
 [node name="Base" type="MeshInstance3D" parent="."]
@@ -51,3 +56,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0524796, -0.202886, 0.2)
 
 [node name="IncreasePulseButton" parent="." instance=ExtResource("5_loydy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.210099, -0.202886, 0.2)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0.1)
+shape = SubResource("BoxShape3D_e03gi")

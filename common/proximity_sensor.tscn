@@ -1,9 +1,8 @@
-[gd_scene load_steps=10 format=3 uid="uid://bf15a11mjqvhp"]
+[gd_scene load_steps=9 format=3 uid="uid://bf15a11mjqvhp"]
 
 [ext_resource type="Script" path="res://common/proximity_sensor.gd" id="1_vjhrv"]
 [ext_resource type="Material" uid="uid://yv30dmw81bec" path="res://common/player_blue_material.tres" id="2_7lxvq"]
 [ext_resource type="PackedScene" uid="uid://bucn8nsdbdsvh" path="res://common/pin.tscn" id="3_yfto7"]
-[ext_resource type="Script" path="res://common/radius_hint.gd" id="4_m17hj"]
 [ext_resource type="Material" uid="uid://dk4lvfgioj0mn" path="res://common/radius_hint_material.tres" id="5_a4y4y"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_ih373"]
@@ -18,10 +17,12 @@ material = ExtResource("5_a4y4y")
 radius = 6.0
 height = 12.0
 
-[sub_resource type="SphereShape3D" id="SphereShape3D_1wbjj"]
-radius = 0.286805
+[sub_resource type="BoxShape3D" id="BoxShape3D_jao7g"]
+size = Vector3(0.5, 0.2, 0.5)
 
-[node name="ProximitySensor" type="Node3D" groups=["gates"]]
+[node name="ProximitySensor" type="StaticBody3D" groups=["gates"]]
+collision_layer = 2
+collision_mask = 2
 script = ExtResource("1_vjhrv")
 
 [node name="Base" type="MeshInstance3D" parent="."]
@@ -52,17 +53,11 @@ SESNOR"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="RadiusHint" type="StaticBody3D" parent="."]
-visible = false
-collision_layer = 2
-collision_mask = 2
-script = ExtResource("4_m17hj")
-
-[node name="FocusMesh" type="MeshInstance3D" parent="RadiusHint" groups=["focus_meshes"]]
+[node name="FocusMesh" type="MeshInstance3D" parent="." groups=["focus_meshes"]]
 visible = false
 mesh = SubResource("SphereMesh_x1ari")
-skeleton = NodePath("../../..")
+skeleton = NodePath("../..")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="RadiusHint"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.1)
-shape = SubResource("SphereShape3D_1wbjj")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0.1)
+shape = SubResource("BoxShape3D_jao7g")
