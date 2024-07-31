@@ -240,12 +240,11 @@ func _is_input_pin(pin: Pin) -> bool:
 
 
 func _remove_pin_wires(pin: Pin) -> void:
-	for output_pin in pin.wires:
-		var wire: Wire = pin.wires[output_pin]
+	for other_pin in pin.wires.keys():
+		var wire: Wire = pin.wires[other_pin]
 		wire.queue_free()
-		pin.wires.erase(output_pin)
-		output_pin.wires.erase(pin)
-
+		pin.wires.erase(other_pin)
+		other_pin.wires.erase(pin)
 
 
 func _set_wire_end_position(wire: Wire, end: Vector3) -> void:

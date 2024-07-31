@@ -550,6 +550,7 @@ func _update_camera_linear_velocity(delta: float) -> void:
 
 
 func _update_camera_angular_velocity(delta: float) -> void:
+	var prev_z := _camera.rotation.z
 	var error := -_camera.rotation
 	var error_delta := (_last_camera_rotation - _camera.rotation) / delta
 	var accel := (
@@ -558,6 +559,7 @@ func _update_camera_angular_velocity(delta: float) -> void:
 	_camera_angular_velocity += accel * delta
 	_last_camera_rotation = _camera.rotation
 	_camera.rotation += _camera_angular_velocity * delta
+	_camera.rotation.z = prev_z
 
 
 func _update_blood_effects(delta: float) -> void:
