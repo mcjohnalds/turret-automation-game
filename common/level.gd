@@ -29,6 +29,7 @@ var _energy := _MAX_ENERGY
 var _create_wire_start_pin: Pin
 var _create_wire: Wire
 var _money := 100
+var _pause_enemies := false
 # A gate can be a ProximitySensor, OrGate, AndGate, PulseTimerGate, or Turret
 @onready var _player: KinematicFpsController = %Player
 @onready var _heart: Heart = %Heart
@@ -44,15 +45,19 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	for enemy: Enemy in get_tree().get_nodes_in_group("enemies"):
-		if enemy.is_on_floor():
-			enemy.velocity.y = 0.0
+		if _pause_enemies:
+			enemy.process_mode = Node.PROCESS_MODE_DISABLED
 		else:
-			enemy.velocity.y -= 9.8 * delta
-		if not enemy.nav_agent.is_navigation_finished():
-			var next := enemy.nav_agent.get_next_path_position()
-			enemy.nav_agent.velocity = enemy.nav_agent.max_speed * enemy.global_position.direction_to(next)
-		if enemy.global_position.distance_to(_heart.global_position) < 2.0:
-			_heart.health -= delta * 4.0
+			enemy.process_mode = Node.PROCESS_MODE_INHERIT
+			if enemy.is_on_floor():
+				enemy.velocity.y = 0.0
+			else:
+				enemy.velocity.y -= 9.8 * delta
+			if not enemy.nav_agent.is_navigation_finished():
+				var next := enemy.nav_agent.get_next_path_position()
+				enemy.nav_agent.velocity = enemy.nav_agent.max_speed * enemy.global_position.direction_to(next)
+			if enemy.global_position.distance_to(_heart.global_position) < 2.0:
+				_heart.health -= delta * 4.0
 	for gate in get_tree().get_nodes_in_group("gates"):
 		if gate is ProximitySensor:
 			gate.output_value = false
@@ -100,7 +105,10 @@ func _physics_process(delta: float) -> void:
 	_energy_bar_control.foreground.anchor_right = _energy / _MAX_ENERGY
 	_update_using()
 	_instructions_label.text = _instructions_label_format_string.format(
-		PRICES.merged({ "money": _money })
+		PRICES.merged({
+			"money": _money,
+			"pause_enemies": "paused" if _pause_enemies else "unpaused"
+		})
 	)
 
 
@@ -116,6 +124,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			enemy.global_position = collision.position
 			enemy.nav_agent.velocity_computed.connect(_on_enemy_velocity_computed.bind(enemy))
 			enemy.nav_agent.target_position = _heart.global_position
+		if e.keycode == KEY_E and e.pressed:
+			_pause_enemies = not _pause_enemies
 		if e.keycode >= KEY_1 and e.keycode <= KEY_7 and e.pressed:
 			var scene: PackedScene
 			var item: String

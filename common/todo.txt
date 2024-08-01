@@ -1,3 +1,19 @@
+- Ideas
+  - Lose power when consuming too much power at once
+  - Different enemy types require different turrets/fire modes/sensoes
+    - Enemies with shields. Detected by shield detector. Stopped by shield
+      disruptor.
+    - Armored enemies. Deteced by armored enemy sensor. Best stopped by rail
+      gun. Rail gun works on all enemies but requires lots of power.
+    - Stealth enemies - will skip prox sensors and require a differenent sensor
+      type.
+  - Backup power systems
+  - Prox senssors are now footstep sensors that are also detected by the player
+  - Single use traps
+  - Different sensor types e.g laser tripwire, thermal.
+  - Single use power boost
+  - Stealth enemies that can only be detected via tripwire
+  - Jammer enemy that jams prox sensors
 - Inventory
   - Limit component placement
 - Component vending machine

@@ -85,6 +85,7 @@ Right-click - delete
 6 - spawn pulse timer ${pulse_timer}
 7 - spawn button ${button}
 Q - spawn enemy
+E - pause enemies ({pause_enemies})
 Escape - pause
 F - noclip"
 
